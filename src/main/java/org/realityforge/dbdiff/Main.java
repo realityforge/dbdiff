@@ -76,7 +76,7 @@ public class Main
     }
     catch ( final Exception e )
     {
-      error( "Unable to load database driver " + c_databaseDriver + " due to " + e.getMessage() );
+      error( "Unable to load database driver " + c_databaseDriver + " due to " + e );
       System.exit( ERROR_BAD_DRIVER_EXIT_CODE );
       return;
     }
