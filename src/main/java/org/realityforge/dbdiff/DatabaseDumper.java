@@ -36,6 +36,9 @@ public final class DatabaseDumper
     Arrays.asList( FK_NAME, "PKTABLE_NAME", "PKCOLUMN_NAME", "FKTABLE_CAT", "FKTABLE_SCHEM",
                    "FKTABLE_NAME", "FKCOLUMN_NAME", "KEY_SEQ", "UPDATE_RULE", "DELETE_RULE",
                    "PK_NAME", "DEFERRABILITY" );
+  private static final String PK_NAME = "pk_name";
+  private static final List<String> ALLOWABLE_PRIMARY_KEY_ATTRIBUTES =
+    Arrays.asList( PK_NAME, "COLUMN_NAME", "KEY_SEQ" );
 
   private final Connection _connection;
   private final String _dialect;
@@ -78,6 +81,12 @@ public final class DatabaseDumper
       final String tableType = (String) table.get( TABLE_TYPE );
       w.write( "\t" + tableType + ": " + tableName + "\n" );
 
+      for ( final LinkedHashMap<String, Object> pk : getPrimaryKeys( metaData, schema, tableName ) )
+      {
+        final String pkName = (String) pk.get( PK_NAME );
+        pk.remove( PK_NAME );
+        w.write( "\t\tPK      : " + pkName + ": " + compact( pk ) + "\n" );
+      }
       for ( final LinkedHashMap<String, Object> column : getColumns( metaData, schema, tableName ) )
       {
         final String columnName = (String) column.get( COLUMN_NAME );
@@ -105,6 +114,15 @@ public final class DatabaseDumper
       }
     }
     return column;
+  }
+
+  private List<LinkedHashMap<String, Object>> getPrimaryKeys( final DatabaseMetaData metaData,
+                                                               final String schema,
+                                                               final String tablename )
+    throws Exception
+  {
+    final ResultSet columnResultSet = metaData.getPrimaryKeys( null, schema, tablename );
+    return extractFromRow( columnResultSet, ALLOWABLE_PRIMARY_KEY_ATTRIBUTES );
   }
 
   private List<LinkedHashMap<String, Object>> getImportedKeys( final DatabaseMetaData metaData,
