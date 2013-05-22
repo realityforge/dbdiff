@@ -23,11 +23,13 @@ public class Main
     new CLOptionDescriptor( "quiet",
                             CLOptionDescriptor.ARGUMENT_DISALLOWED,
                             QUIET_OPT,
-                            "Do not output unless an error occurs, just return 0 on no difference." ),
+                            "Do not output unless an error occurs, just return 0 on no difference.",
+                            new int[]{VERBOSE_OPT} ),
     new CLOptionDescriptor( "verbose",
                             CLOptionDescriptor.ARGUMENT_DISALLOWED,
                             VERBOSE_OPT,
-                            "Verbose output of differences." ),
+                            "Verbose output of differences.",
+                            new int[]{QUIET_OPT}),
   };
 
   private static final int NO_DIFFERENCE_EXIT_CODE = 0;
