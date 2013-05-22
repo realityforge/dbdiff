@@ -44,15 +44,12 @@ public final class DatabaseDumper
     Arrays.asList( "GRANTOR", "GRANTEE", "PRIVILEGE", "IS_GRANTABLE" );
 
   private final Connection _connection;
-  private final String _dialect;
   private final List<String> _schemas;
 
   public DatabaseDumper( final Connection connection,
-                         final String dialect,
                          final String[] schemas )
   {
     _connection = connection;
-    _dialect = dialect;
     _schemas = Arrays.asList( schemas );
   }
 
