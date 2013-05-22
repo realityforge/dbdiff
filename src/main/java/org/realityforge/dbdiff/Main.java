@@ -2,6 +2,7 @@ package org.realityforge.dbdiff;
 
 import java.sql.Connection;
 import java.sql.Driver;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import org.realityforge.cli.CLArgsParser;
@@ -20,6 +21,7 @@ public class Main
   private static final int DATABASE_DRIVER_OPT = 2;
   private static final int DATABASE_DIALECT_OPT = 3;
   private static final int DATABASE_PROPERTY_OPT = 'D';
+  private static final int SCHEMA_OPT = 's';
 
   private static final CLOptionDescriptor[] OPTIONS = new CLOptionDescriptor[]{
     new CLOptionDescriptor( "database-driver",
@@ -34,6 +36,10 @@ public class Main
                             CLOptionDescriptor.ARGUMENTS_REQUIRED_2 | CLOptionDescriptor.DUPLICATES_ALLOWED,
                             DATABASE_PROPERTY_OPT,
                             "A jdbc property." ),
+    new CLOptionDescriptor( "schema",
+                            CLOptionDescriptor.ARGUMENT_REQUIRED | CLOptionDescriptor.DUPLICATES_ALLOWED,
+                            SCHEMA_OPT,
+                            "A schema to analyze." ),
     new CLOptionDescriptor( "help",
                             CLOptionDescriptor.ARGUMENT_DISALLOWED,
                             HELP_OPT,
@@ -66,6 +72,7 @@ public class Main
   private static String c_database1;
   private static String c_database2;
   private static final Properties c_dbProperties = new Properties();
+  private static final ArrayList<String> c_schemas = new ArrayList<String>();
 
   public static void main( final String[] args )
   {
@@ -194,6 +201,11 @@ public class Main
             return false;
           }
           break;
+        case SCHEMA_OPT:
+        {
+          c_schemas.add( option.getArgument() );
+          break;
+        }
         case DATABASE_PROPERTY_OPT:
         {
           c_dbProperties.setProperty( option.getArgument(), option.getArgument( 1 ) );
@@ -247,6 +259,7 @@ public class Main
       info( "Database 1: " + c_database1 );
       info( "Database 2: " + c_database2 );
       info( "Database Properties: " + c_dbProperties );
+      info( "Schemas: " + c_schemas );
     }
 
     return true;
