@@ -11,6 +11,8 @@ define 'dbdiff' do
                :diffutils,
                :postgresql
 
+  test.using :testng
+
   package(:jar)
   package(:jar, :classifier => 'all').tap do |jar|
     jar.merge(artifact(:spice_cli))
