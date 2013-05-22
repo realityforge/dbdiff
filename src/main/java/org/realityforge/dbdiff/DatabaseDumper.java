@@ -45,6 +45,9 @@ public final class DatabaseDumper
     Arrays.asList( "GRANTOR", "GRANTEE", "PRIVILEGE", "IS_GRANTABLE" );
   private static final String PROCEDURE_NAME = "procedure_name";
   private static final List<String> ALLOWABLE_PROCEDURE_ATTRIBUTES = Arrays.asList( "procedure_type", PROCEDURE_NAME );
+    private static final String UDT_NAME = "type_name";
+  private static final List<String> ALLOWABLE_UDT_ATTRIBUTES =
+    Arrays.asList( UDT_NAME, "CLASS_NAME", "DATA_TYPE", "REMARKS", "BASE_TYPE" );
   private static final String PROCEDURE_COLUMN_NAME = "column_name";
   private static final List<String> ALLOWABLE_PROCEDURE_COLUMN_ATTRIBUTES =
     Arrays.asList( PROCEDURE_COLUMN_NAME, "COLUMN_TYPE", "DATA_TYPE", "TYPE_NAME", "PRECISION",
@@ -127,6 +130,11 @@ public final class DatabaseDumper
         final String name = (String) c.remove( PROCEDURE_COLUMN_NAME );
         w.write( "\t\tPARAM   : " + name + ": " + compact( c ) + "\n" );
       }
+    }
+    for ( final LinkedHashMap<String, Object> v : getUDTsForSchema( metaData, schema ) )
+    {
+      final String key = (String) v.remove( UDT_NAME );
+      w.write( "\tUDT     : " + key + ": " + compact( v ) + "\n" );
     }
 
     //metaData.getAttributes(  )
@@ -228,6 +236,25 @@ public final class DatabaseDumper
       {
         final String left = (String) lhs.get( PROCEDURE_NAME );
         final String right = (String) rhs.get( PROCEDURE_NAME );
+        return left.compareTo( right );
+      }
+    } );
+    return linkedHashMaps;
+  }
+
+  private List<LinkedHashMap<String, Object>> getUDTsForSchema( final DatabaseMetaData metaData,
+                                                                final String schema )
+    throws Exception
+  {
+    final List<LinkedHashMap<String, Object>> linkedHashMaps =
+      extractFromRow( metaData.getUDTs( null, schema, null, null ), ALLOWABLE_UDT_ATTRIBUTES );
+    Collections.sort( linkedHashMaps, new Comparator<LinkedHashMap<String, Object>>()
+    {
+      @Override
+      public int compare( final LinkedHashMap<String, Object> lhs, final LinkedHashMap<String, Object> rhs )
+      {
+        final String left = (String) lhs.get( UDT_NAME );
+        final String right = (String) rhs.get( UDT_NAME );
         return left.compareTo( right );
       }
     } );
