@@ -45,6 +45,11 @@ public final class DatabaseDumper
   private static final String PK_NAME = "pk_name";
   private static final List<String> ALLOWABLE_PRIMARY_KEY_ATTRIBUTES =
     Arrays.asList( PK_NAME, "COLUMN_NAME", "KEY_SEQ" );
+  private static final String VERSION_COLUMN_NAME = "column_name";
+  private static final List<String> ALLOWABLE_VERSION_COLUMN_ATTRIBUTES =
+    Arrays.asList( VERSION_COLUMN_NAME, "DATA_TYPE", "SCOPE", "TYPE_NAME", "COLUMN_SIZE", "BUFFER_LENGTH",
+                   "DECIMAL_DIGITS", "PSEUDO_COLUMN" );
+
   private static final List<String> ALLOWABLE_TABLE_PRIV_ATTRIBUTES =
     Arrays.asList( "GRANTOR", "GRANTEE", "PRIVILEGE", "IS_GRANTABLE" );
   private static final List<String> ALLOWABLE_COLUMN_PRIV_ATTRIBUTES =
@@ -131,11 +136,15 @@ public final class DatabaseDumper
       {
         w.write( "\t\tPRIV    : " + compact( priv ) + "\n" );
       }
-      for ( final LinkedHashMap<String, Object> pk : getPrimaryKeys( metaData, schema, tableName ) )
+      for ( final LinkedHashMap<String, Object> v : getPrimaryKeys( metaData, schema, tableName ) )
       {
-        final String pkName = (String) pk.get( PK_NAME );
-        pk.remove( PK_NAME );
-        w.write( "\t\tPK      : " + pkName + ": " + compact( pk ) + "\n" );
+        final String name = (String) v.remove( PK_NAME );
+        w.write( "\t\tPK      : " + name + ": " + compact( v ) + "\n" );
+      }
+      for ( final LinkedHashMap<String, Object> v : getVersionColumns( metaData, schema, tableName ) )
+      {
+        final String name = (String) v.get( VERSION_COLUMN_NAME );
+        w.write( "\t\tGEN     : " + name + ": " + compact( v ) + "\n" );
       }
       for ( final LinkedHashMap<String, Object> column : getColumns( metaData, schema, tableName ) )
       {
@@ -238,6 +247,15 @@ public final class DatabaseDumper
   {
     final ResultSet columnResultSet = metaData.getPrimaryKeys( null, schema, tablename );
     return extractFromRow( columnResultSet, ALLOWABLE_PRIMARY_KEY_ATTRIBUTES );
+  }
+
+  private List<LinkedHashMap<String, Object>> getVersionColumns( final DatabaseMetaData metaData,
+                                                                 final String schema,
+                                                                 final String tablename )
+    throws Exception
+  {
+    final ResultSet columnResultSet = metaData.getVersionColumns( null, schema, tablename );
+    return extractFromRow( columnResultSet, ALLOWABLE_VERSION_COLUMN_ATTRIBUTES );
   }
 
   private List<LinkedHashMap<String, Object>> getImportedKeys( final DatabaseMetaData metaData,
