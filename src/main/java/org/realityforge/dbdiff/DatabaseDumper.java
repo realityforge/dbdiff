@@ -45,6 +45,10 @@ public final class DatabaseDumper
     Arrays.asList( "GRANTOR", "GRANTEE", "PRIVILEGE", "IS_GRANTABLE" );
   private static final String PROCEDURE_NAME = "procedure_name";
   private static final List<String> ALLOWABLE_PROCEDURE_ATTRIBUTES = Arrays.asList( "procedure_type", PROCEDURE_NAME );
+  private static final String PROCEDURE_COLUMN_NAME = "column_name";
+  private static final List<String> ALLOWABLE_PROCEDURE_COLUMN_ATTRIBUTES =
+    Arrays.asList( PROCEDURE_COLUMN_NAME, "COLUMN_TYPE", "DATA_TYPE", "TYPE_NAME", "PRECISION",
+                   "LENGTH", "SCALE", "RADIX", "NULLABLE", "REMARKS");
 
   private final Connection _connection;
   private final List<String> _schemas;
@@ -117,7 +121,12 @@ public final class DatabaseDumper
     {
       final String key = (String) v.remove( PROCEDURE_NAME );
       w.write( "\tPROC    : " + key + ": " + compact( v ) + "\n" );
-      //metaData.getProcedureColumns(  )
+
+        for ( final LinkedHashMap<String, Object> c : getProcedureColumns( metaData, schema, key ) )
+      {
+        final String name = (String) c.remove( PROCEDURE_COLUMN_NAME );
+        w.write( "\t\tPARAM   : " + name + ": " + compact( c ) + "\n" );
+      }
     }
 
     //metaData.getAttributes(  )
@@ -223,6 +232,15 @@ public final class DatabaseDumper
       }
     } );
     return linkedHashMaps;
+  }
+
+  private List<LinkedHashMap<String, Object>> getProcedureColumns( final DatabaseMetaData metaData,
+                                                                   final String schema,
+                                                                   final String procedureName )
+    throws Exception
+  {
+    final ResultSet columnResultSet = metaData.getProcedureColumns( null, schema, procedureName, null );
+    return extractFromRow( columnResultSet, ALLOWABLE_PROCEDURE_COLUMN_ATTRIBUTES );
   }
 
   private List<String> getSchema( final DatabaseMetaData metaData )
