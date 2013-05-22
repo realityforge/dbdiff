@@ -26,6 +26,7 @@ public class Main
   private static final int DATABASE_DIALECT_OPT = 3;
   private static final int DATABASE_PROPERTY_OPT = 'D';
   private static final int SCHEMA_OPT = 's';
+  private static final int CONTEXT_SIZE_OPT = 4;
 
   private static final CLOptionDescriptor[] OPTIONS = new CLOptionDescriptor[]{
     new CLOptionDescriptor( "database-driver",
@@ -44,6 +45,10 @@ public class Main
                             CLOptionDescriptor.ARGUMENT_REQUIRED | CLOptionDescriptor.DUPLICATES_ALLOWED,
                             SCHEMA_OPT,
                             "A schema to analyze." ),
+    new CLOptionDescriptor( "context-size",
+                            CLOptionDescriptor.ARGUMENT_REQUIRED,
+                            CONTEXT_SIZE_OPT,
+                            "The number of context lines in the diff." ),
     new CLOptionDescriptor( "help",
                             CLOptionDescriptor.ARGUMENT_DISALLOWED,
                             HELP_OPT,
@@ -77,6 +82,7 @@ public class Main
   private static String c_database2;
   private static final Properties c_dbProperties = new Properties();
   private static final ArrayList<String> c_schemas = new ArrayList<String>();
+  private static int c_contextSize = 10;
 
   public static void main( final String[] args )
   {
@@ -182,7 +188,7 @@ public class Main
 
     // Compute diff. Get the Patch object. Patch is the container for computed deltas.
     final Patch patch = DiffUtils.diff( database1, database2 );
-    return DiffUtils.generateUnifiedDiff( c_database1, c_database2, database1, patch, 2 );
+    return DiffUtils.generateUnifiedDiff( c_database1, c_database2, database1, patch, c_contextSize );
   }
 
   private static String databaseSchemaToString( final Connection connection )
@@ -240,6 +246,11 @@ public class Main
             return false;
           }
           break;
+        case CONTEXT_SIZE_OPT:
+        {
+          c_contextSize = Integer.parseInt( option.getArgument() );
+          break;
+        }
         case SCHEMA_OPT:
         {
           c_schemas.add( option.getArgument() );
