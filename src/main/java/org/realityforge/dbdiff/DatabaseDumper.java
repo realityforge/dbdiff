@@ -31,6 +31,11 @@ public final class DatabaseDumper
                    "NUM_PREC_RADIX", "COLUMN_SIZE", "TYPE_NAME", "IS_AUTOINCREMENT", "DECIMAL_DIGITS", "DATA_TYPE",
                    "BUFFER_LENGTH", "CHAR_OCTET_LENGTH", "IS_NULLABLE", "NULLABLE", "SQL_DATETIME_SUB", "REMARKS",
                    "SCOPE_CATLOG", "SCOPE_SCHEMA", "SCOPE_TABLE" );
+  private static final String FK_NAME = "fk_name";
+  private static final List<String> ALLOWABLE_EXPORTED_KEY_ATTRIBUTES =
+    Arrays.asList( FK_NAME, "PKTABLE_NAME", "PKCOLUMN_NAME", "FKTABLE_CAT", "FKTABLE_SCHEM",
+                   "FKTABLE_NAME", "FKCOLUMN_NAME", "KEY_SEQ", "UPDATE_RULE", "DELETE_RULE",
+                   "PK_NAME", "DEFERRABILITY" );
 
   private final Connection _connection;
   private final String _dialect;
@@ -79,6 +84,12 @@ public final class DatabaseDumper
         column.remove( COLUMN_NAME );
         w.write( "\t\t" + columnName + ": " + compact( column ) + "\n" );
       }
+      for ( final LinkedHashMap<String, Object> fk : getExportedKeys( metaData, schema, tableName ) )
+      {
+        final String fkName = (String) fk.get( FK_NAME );
+        fk.remove( FK_NAME );
+        w.write( "\t\t" + fkName + ": " + compact( fk ) + "\n" );
+      }
     }
   }
 
@@ -94,6 +105,15 @@ public final class DatabaseDumper
       }
     }
     return column;
+  }
+
+  private List<LinkedHashMap<String, Object>> getExportedKeys( final DatabaseMetaData metaData,
+                                                               final String schema,
+                                                               final String tablename )
+    throws Exception
+  {
+    final ResultSet columnResultSet = metaData.getExportedKeys( null, schema, tablename );
+    return extractFromRow( columnResultSet, ALLOWABLE_EXPORTED_KEY_ATTRIBUTES );
   }
 
   private List<LinkedHashMap<String, Object>> getColumns( final DatabaseMetaData metaData,
