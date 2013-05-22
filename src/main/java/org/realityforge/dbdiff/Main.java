@@ -1,6 +1,9 @@
 package org.realityforge.dbdiff;
 
+import java.sql.Connection;
+import java.sql.Driver;
 import java.util.List;
+import java.util.Properties;
 import org.realityforge.cli.CLArgsParser;
 import org.realityforge.cli.CLOption;
 import org.realityforge.cli.CLOptionDescriptor;
@@ -46,6 +49,7 @@ public class Main
   private static final int DIFFERENCE_EXIT_CODE = 1;
   private static final int ERROR_PARSING_ARGS_EXIT_CODE = 2;
   private static final int ERROR_BAD_DRIVER_EXIT_CODE = 3;
+  private static final int ERROR_OTHER_EXIT_CODE = 4;
 
   private static final int QUIET = 0;
   private static final int NORMAL = 1;
@@ -56,6 +60,7 @@ public class Main
   private static String c_databaseDialect;
   private static String c_database1;
   private static String c_database2;
+  private static final Properties c_dbProperties = new Properties();
 
   public static void main( final String[] args )
   {
@@ -70,18 +75,14 @@ public class Main
       info( "Performing difference between databases" );
     }
 
-    try
+    final Driver driver = loadDatabaseDriver();
+    if ( null == driver )
     {
-      Class.forName( c_databaseDriver );
-    }
-    catch ( final Exception e )
-    {
-      error( "Unable to load database driver " + c_databaseDriver + " due to " + e );
       System.exit( ERROR_BAD_DRIVER_EXIT_CODE );
       return;
     }
 
-    final boolean difference = diff();
+    final boolean difference = diff( driver );
 
     if ( difference )
     {
@@ -101,9 +102,58 @@ public class Main
     }
   }
 
-  private static boolean diff()
+  private static Driver loadDatabaseDriver()
   {
-    return false;
+    try
+    {
+      return (Driver)Class.forName( c_databaseDriver ).newInstance();
+    }
+    catch ( final Exception e )
+    {
+      error( "Unable to load database driver " + c_databaseDriver + " due to " + e );
+      System.exit( ERROR_BAD_DRIVER_EXIT_CODE );
+      return null;
+    }
+  }
+
+  static class DifferenceReporter
+  implements DatabaseDifferenceHandler
+  {
+    boolean _differenceFound;
+    @Override
+    public void databaseDifference( final String description, final boolean added )
+    {
+      if ( NORMAL <= c_logLevel )
+      {
+        info( description + " " + (added ? "added" : "removed") + " from database" );
+      }
+      _differenceFound = true;
+    }
+  }
+
+  private static boolean diff( final Driver driver )
+  {
+    try
+    {
+      final Connection connection1 = driver.connect( c_database1, c_dbProperties );
+      final Connection connection2 = driver.connect( c_database2, c_dbProperties );
+
+      final DifferenceReporter handler = new DifferenceReporter();
+      final DatabaseDiffProcessor processor =
+        new DatabaseDiffProcessor( connection1, connection2, c_databaseDialect, handler );
+      processor.performDiff();
+
+      connection1.close();
+      connection2.close();
+
+      return handler._differenceFound;
+    }
+    catch ( final Throwable t )
+    {
+      error( "Error performing diff: " + t );
+      System.exit( ERROR_OTHER_EXIT_CODE );
+      return false;
+    }
   }
 
   private static boolean processOptions( final String[] args )
