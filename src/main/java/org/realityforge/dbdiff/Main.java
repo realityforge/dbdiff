@@ -126,7 +126,7 @@ public class Main
 
   private static boolean isNormalLogEnabled()
   {
-    return NORMAL == c_logLevel || QUIET == c_logLevel;
+    return NORMAL == c_logLevel || VERBOSE == c_logLevel;
   }
 
   private static boolean isVerboseLogEnabled()
