@@ -19,6 +19,7 @@ public class Main
   private static final int VERBOSE_OPT = 'v';
   private static final int DATABASE_DRIVER_OPT = 2;
   private static final int DATABASE_DIALECT_OPT = 3;
+  private static final int DATABASE_PROPERTY_OPT = 'D';
 
   private static final CLOptionDescriptor[] OPTIONS = new CLOptionDescriptor[]{
     new CLOptionDescriptor( "database-driver",
@@ -29,6 +30,10 @@ public class Main
                             CLOptionDescriptor.ARGUMENT_REQUIRED,
                             DATABASE_DIALECT_OPT,
                             "The database dialect to use during diff." ),
+    new CLOptionDescriptor( "database-property",
+                            CLOptionDescriptor.ARGUMENTS_REQUIRED_2 | CLOptionDescriptor.DUPLICATES_ALLOWED,
+                            DATABASE_PROPERTY_OPT,
+                            "A jdbc property." ),
     new CLOptionDescriptor( "help",
                             CLOptionDescriptor.ARGUMENT_DISALLOWED,
                             HELP_OPT,
@@ -189,6 +194,11 @@ public class Main
             return false;
           }
           break;
+        case DATABASE_PROPERTY_OPT:
+        {
+          c_dbProperties.setProperty( option.getArgument(), option.getArgument( 1 ) );
+          break;
+        }
         case DATABASE_DRIVER_OPT:
         {
           c_databaseDriver = option.getArgument();
@@ -236,6 +246,7 @@ public class Main
     {
       info( "Database 1: " + c_database1 );
       info( "Database 2: " + c_database2 );
+      info( "Database Properties: " + c_dbProperties );
     }
 
     return true;
