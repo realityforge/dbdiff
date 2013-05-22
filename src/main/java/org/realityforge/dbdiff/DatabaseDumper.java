@@ -35,6 +35,8 @@ public final class DatabaseDumper
   private static final List<String> ALLOWABLE_INDEX_ATTRIBUTES =
     Arrays.asList( INDEX_NAME, "NON_UNIQUE", "INDEX_QUALIFIER", "TYPE", "ORDINAL_POSITION",
                    "COLUMN_NAME", "ASC_OR_DESC", "CARDINALITY", "PAGES" );
+  private static final String SUPER_TABLE_NAME = "supertable_name";
+  private static final List<String> ALLOWABLE_SUPER_TABLE_ATTRIBUTES = Arrays.asList( SUPER_TABLE_NAME );
   private static final String FK_NAME = "fk_name";
   private static final List<String> ALLOWABLE_FOREIGN_KEY_ATTRIBUTES =
     Arrays.asList( FK_NAME, "PKTABLE_NAME", "PKCOLUMN_NAME", "FKTABLE_CAT", "FKTABLE_SCHEM",
@@ -106,6 +108,10 @@ public final class DatabaseDumper
       final String tableType = (String) table.get( TABLE_TYPE );
       w.write( "\t" + tableType + ": " + tableName + "\n" );
 
+      for ( final LinkedHashMap<String, Object> priv : getSuperTables( metaData, schema, tableName ) )
+      {
+        w.write( "\t\tSUPER   : " + priv.get( SUPER_TABLE_NAME ) + "\n" );
+      }
       for ( final LinkedHashMap<String, Object> priv : getTablePrivileges( metaData, schema, tableName ) )
       {
         w.write( "\t\tPRIV    : " + compact( priv ) + "\n" );
@@ -163,7 +169,6 @@ public final class DatabaseDumper
       }
     }
 
-    //getSuperTables
     //getSuperTypes
   }
 
@@ -216,6 +221,22 @@ public final class DatabaseDumper
   {
     final ResultSet columnResultSet = metaData.getImportedKeys( null, schema, tablename );
     return extractFromRow( columnResultSet, ALLOWABLE_FOREIGN_KEY_ATTRIBUTES );
+  }
+
+  private List<LinkedHashMap<String, Object>> getSuperTables( final DatabaseMetaData metaData,
+                                                              final String schema,
+                                                              final String tableName )
+    throws Exception
+  {
+    if ( _dialect.equals( POSTGRESQL ) )
+    {
+      return new ArrayList<LinkedHashMap<String, Object>>();
+    }
+    else
+    {
+      final ResultSet columnResultSet = metaData.getSuperTables( null, schema, tableName );
+      return extractFromRow( columnResultSet, ALLOWABLE_SUPER_TABLE_ATTRIBUTES );
+    }
   }
 
   private List<LinkedHashMap<String, Object>> getColumns( final DatabaseMetaData metaData,
