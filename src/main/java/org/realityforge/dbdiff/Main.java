@@ -33,6 +33,10 @@ public class Main
                             CLOptionDescriptor.ARGUMENT_REQUIRED,
                             DATABASE_DRIVER_OPT,
                             "The jdbc driver to load prior to connecting to the databases." ),
+    new CLOptionDescriptor( "database-dialect",
+                            CLOptionDescriptor.ARGUMENT_REQUIRED,
+                            DATABASE_DIALECT_OPT,
+                            "The database dialect to use during diff." ),
     new CLOptionDescriptor( "database-property",
                             CLOptionDescriptor.ARGUMENTS_REQUIRED_2 | CLOptionDescriptor.DUPLICATES_ALLOWED,
                             DATABASE_PROPERTY_OPT,
@@ -73,6 +77,7 @@ public class Main
 
   private static int c_logLevel = NORMAL;
   private static String c_databaseDriver;
+  private static String c_databaseDialect;
   private static String c_database1;
   private static String c_database2;
   private static final Properties c_dbProperties = new Properties();
@@ -191,6 +196,7 @@ public class Main
   {
     final DatabaseDumper dumper =
       new DatabaseDumper( connection,
+                          c_databaseDialect,
                           c_schemas.toArray( new String[ c_schemas.size() ] ) );
     final StringWriter sw = new StringWriter();
     dumper.dump( sw );
@@ -260,6 +266,19 @@ public class Main
           c_databaseDriver = option.getArgument();
           break;
         }
+        case DATABASE_DIALECT_OPT:
+        {
+          c_databaseDialect = option.getArgument();
+          if ( !DatabaseDumper.MSSQL.equals( c_databaseDialect ) &&
+            !DatabaseDumper.POSTGRESQL.equals( c_databaseDialect ))
+          {
+            error( "Unsupported database dialect: " + c_databaseDialect +
+                   ". Supported dialects = " + DatabaseDumper.MSSQL + "," +
+                   DatabaseDumper.POSTGRESQL );
+            return false;
+          }
+          break;
+        }
         case VERBOSE_OPT:
         {
           c_logLevel = VERBOSE;
@@ -283,6 +302,11 @@ public class Main
       error( "Database driver must be specified" );
       return false;
     }
+    if ( null == c_databaseDialect )
+    {
+      error( "Database dialect must be specified" );
+      return false;
+    }
     if ( null == c_database1 || null == c_database2 )
     {
       error( "Two jdbc urls must supplied for the databases to check differences" );
@@ -292,6 +316,7 @@ public class Main
     {
       info( "Database 1: " + c_database1 );
       info( "Database 2: " + c_database2 );
+      info( "Database Dialect: " + c_databaseDialect );
       info( "Database Properties: " + c_dbProperties );
       info( "Schemas: " + c_schemas );
     }

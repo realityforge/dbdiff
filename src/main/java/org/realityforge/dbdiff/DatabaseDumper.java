@@ -52,14 +52,19 @@ public final class DatabaseDumper
   private static final List<String> ALLOWABLE_PROCEDURE_COLUMN_ATTRIBUTES =
     Arrays.asList( PROCEDURE_COLUMN_NAME, "COLUMN_TYPE", "DATA_TYPE", "TYPE_NAME", "PRECISION",
                    "LENGTH", "SCALE", "RADIX", "NULLABLE", "REMARKS");
+  public static final String POSTGRESQL = "postgres";
+  public static final String MSSQL = "mssql";
 
   private final Connection _connection;
+  private final String _dialect;
   private final List<String> _schemas;
 
   public DatabaseDumper( final Connection connection,
+                         final String dialect,
                          final String[] schemas )
   {
     _connection = connection;
+    _dialect = dialect;
     _schemas = Arrays.asList( schemas );
   }
 
