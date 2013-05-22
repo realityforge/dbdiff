@@ -8,7 +8,6 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,7 +34,7 @@ public final class DatabaseDumper
     final List<String> schema = getSchema( metaData );
     for ( final String s : _schemas )
     {
-      if( schema.contains( s ) )
+      if ( schema.contains( s ) )
       {
         w.write( "Schema: " + s + "\n" );
       }
@@ -78,14 +77,18 @@ public final class DatabaseDumper
     T handle( Map<String, Object> row );
   }
 
-   private <T> List<T> map( final ResultSet resultSet, final MapHandler<T> handler )
+  private <T> List<T> map( final ResultSet resultSet, final MapHandler<T> handler )
     throws Exception
   {
-    final ArrayList<T> results = new ArrayList<T>(  );
-    for ( final Map<String, Object> row : toList( resultSet ) )
+    final ArrayList<T> results = new ArrayList<T>();
+    each( resultSet, new RowHandler()
     {
-      results.add( handler.handle( row ) );
-    }
+      @Override
+      public void handle( final Map<String, Object> row )
+      {
+        results.add( handler.handle( row ) );
+      }
+    } );
     return results;
   }
 
