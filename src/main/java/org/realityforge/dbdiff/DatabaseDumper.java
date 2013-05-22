@@ -43,6 +43,8 @@ public final class DatabaseDumper
     Arrays.asList( "GRANTOR", "GRANTEE", "PRIVILEGE", "IS_GRANTABLE" );
   private static final List<String> ALLOWABLE_COLUMN_PRIV_ATTRIBUTES =
     Arrays.asList( "GRANTOR", "GRANTEE", "PRIVILEGE", "IS_GRANTABLE" );
+  private static final String PROCEDURE_NAME = "procedure_name";
+  private static final List<String> ALLOWABLE_PROCEDURE_ATTRIBUTES = Arrays.asList( "procedure_type", PROCEDURE_NAME );
 
   private final Connection _connection;
   private final List<String> _schemas;
@@ -111,8 +113,13 @@ public final class DatabaseDumper
         w.write( "\t\tFK      : " + fkName + ": " + compact( fk ) + "\n" );
       }
     }
-    //metaData.getProcedures(  )
-    //metaData.getProcedureColumns(  )
+    for ( final LinkedHashMap<String, Object> v : getProceduresForSchema( metaData, schema ) )
+    {
+      final String key = (String) v.remove( PROCEDURE_NAME );
+      w.write( "\tPROC    : " + key + ": " + compact( v ) + "\n" );
+      //metaData.getProcedureColumns(  )
+    }
+
     //metaData.getAttributes(  )
     //metaData.getIndexInfo
   }
@@ -193,6 +200,25 @@ public final class DatabaseDumper
       {
         final String left = (String) lhs.get( TABLE_TYPE ) + lhs.get( TABLE_NAME );
         final String right = (String) rhs.get( TABLE_TYPE ) + rhs.get( TABLE_NAME );
+        return left.compareTo( right );
+      }
+    } );
+    return linkedHashMaps;
+  }
+
+  private List<LinkedHashMap<String, Object>> getProceduresForSchema( final DatabaseMetaData metaData,
+                                                                      final String schema )
+    throws Exception
+  {
+    final List<LinkedHashMap<String, Object>> linkedHashMaps =
+      extractFromRow( metaData.getProcedures( null, schema, null ), ALLOWABLE_PROCEDURE_ATTRIBUTES );
+    Collections.sort( linkedHashMaps, new Comparator<LinkedHashMap<String, Object>>()
+    {
+      @Override
+      public int compare( final LinkedHashMap<String, Object> lhs, final LinkedHashMap<String, Object> rhs )
+      {
+        final String left = (String) lhs.get( PROCEDURE_NAME );
+        final String right = (String) rhs.get( PROCEDURE_NAME );
         return left.compareTo( right );
       }
     } );
