@@ -31,6 +31,10 @@ public final class DatabaseDumper
                    "NUM_PREC_RADIX", "COLUMN_SIZE", "TYPE_NAME", "IS_AUTOINCREMENT", "DECIMAL_DIGITS", "DATA_TYPE",
                    "BUFFER_LENGTH", "CHAR_OCTET_LENGTH", "IS_NULLABLE", "NULLABLE", "SQL_DATETIME_SUB", "REMARKS",
                    "SCOPE_CATLOG", "SCOPE_SCHEMA", "SCOPE_TABLE" );
+  private static final String INDEX_NAME = "index_name";
+  private static final List<String> ALLOWABLE_INDEX_ATTRIBUTES =
+    Arrays.asList( INDEX_NAME, "NON_UNIQUE", "INDEX_QUALIFIER", "TYPE", "ORDINAL_POSITION",
+                   "COLUMN_NAME", "ASC_OR_DESC", "CARDINALITY", "PAGES" );
   private static final String FK_NAME = "fk_name";
   private static final List<String> ALLOWABLE_FOREIGN_KEY_ATTRIBUTES =
     Arrays.asList( FK_NAME, "PKTABLE_NAME", "PKCOLUMN_NAME", "FKTABLE_CAT", "FKTABLE_SCHEM",
@@ -130,6 +134,11 @@ public final class DatabaseDumper
         fk.remove( FK_NAME );
         w.write( "\t\tFK      : " + fkName + ": " + compact( fk ) + "\n" );
       }
+      for ( final LinkedHashMap<String, Object> v : getIndexInfo( metaData, schema, tableName ) )
+      {
+        final String name = (String) v.remove( INDEX_NAME );
+        w.write( "\t\tIX      : " + name + ": " + compact( v ) + "\n" );
+      }
     }
     for ( final LinkedHashMap<String, Object> v : getProceduresForSchema( metaData, schema ) )
     {
@@ -154,7 +163,6 @@ public final class DatabaseDumper
       }
     }
 
-    //metaData.getIndexInfo
     //getSuperTables
     //getSuperTypes
   }
@@ -217,6 +225,15 @@ public final class DatabaseDumper
   {
     final ResultSet columnResultSet = metaData.getColumns( null, schema, tablename, null );
     return extractFromRow( columnResultSet, ALLOWABLE_COLUMN_ATTRIBUTES );
+  }
+
+  private List<LinkedHashMap<String, Object>> getIndexInfo( final DatabaseMetaData metaData,
+                                                            final String schema,
+                                                            final String tableName )
+    throws Exception
+  {
+    final ResultSet columnResultSet = metaData.getIndexInfo( null, schema, tableName, false, true );
+    return extractFromRow( columnResultSet, ALLOWABLE_INDEX_ATTRIBUTES );
   }
 
   private List<LinkedHashMap<String, Object>> getTablesForSchema( final DatabaseMetaData metaData,
