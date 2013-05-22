@@ -7,7 +7,8 @@ define 'dbdiff' do
   compile.options.target = '1.6'
   compile.options.lint = 'all'
 
-  compile.with :spice_cli
+  compile.with :spice_cli,
+               :postgresql
 
   package(:jar)
   package(:jar, :classifier => 'all').tap do |jar|
