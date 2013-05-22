@@ -1,5 +1,5 @@
-DbDiff - Simple command to print differences between database schemas
-=====================================================================
+DbDiff - List differences between databases
+===========================================
 
 [![Build Status](https://secure.travis-ci.org/realityforge/dbdiff.png?branch=master)](http://travis-ci.org/realityforge/dbdiff)
 
