@@ -3,9 +3,7 @@ package org.realityforge.dbdiff;
 import java.sql.Driver;
 import java.util.List;
 import java.util.logging.ConsoleHandler;
-import java.util.logging.Formatter;
 import java.util.logging.Level;
-import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import org.realityforge.cli.CLArgsParser;
 import org.realityforge.cli.CLOption;
@@ -134,14 +132,7 @@ public class Main
   {
     c_logger.setUseParentHandlers( false );
     final ConsoleHandler handler = new ConsoleHandler();
-    handler.setFormatter( new Formatter()
-    {
-      @Override
-      public String format( final LogRecord logRecord )
-      {
-        return logRecord.getMessage() + "\n";
-      }
-    } );
+    handler.setFormatter( new RawFormatter() );
     c_logger.addHandler( handler );
     c_diffTool.setLogger( c_logger );
   }
