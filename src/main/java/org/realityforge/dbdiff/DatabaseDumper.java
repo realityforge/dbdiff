@@ -52,6 +52,12 @@ public final class DatabaseDumper
   private static final List<String> ALLOWABLE_PROCEDURE_COLUMN_ATTRIBUTES =
     Arrays.asList( PROCEDURE_COLUMN_NAME, "COLUMN_TYPE", "DATA_TYPE", "TYPE_NAME", "PRECISION",
                    "LENGTH", "SCALE", "RADIX", "NULLABLE", "REMARKS");
+  private static final String UDT_ATTRIBUTE_NAME = "attr_name";
+  private static final List<String> ALLOWABLE_UDT_ATTRIBUTE_ATTRIBUTES =
+    Arrays.asList( UDT_ATTRIBUTE_NAME, "TYPE_NAME", "DATA_TYPE", "ATTR_TYPE_NAME", "ATTR_SIZE",
+                   "DECIMAL_DIGITS", "NUM_PREC_RADIX", "NULLABLE", "REMARKS", "ATTR_DEF", "SQL_DATA_TYPE",
+                   "SQL_DATETIME_SUB", "CHAR_OCTET_LENGTH", "ORDINAL_POSITION", "IS_NULLABLE", "SCOPE_CATALOG",
+                   "SCOPE_SCHEMA", "SCOPE_TABLE", "SOURCE_DATA_TYPE" );
   public static final String POSTGRESQL = "postgres";
   public static final String MSSQL = "mssql";
 
@@ -140,10 +146,17 @@ public final class DatabaseDumper
     {
       final String key = (String) v.remove( UDT_NAME );
       w.write( "\tUDT     : " + key + ": " + compact( v ) + "\n" );
+
+      for ( final LinkedHashMap<String, Object> c : getAttributesColumns( metaData, schema, key ) )
+      {
+        final String name = (String) c.remove( UDT_ATTRIBUTE_NAME );
+        w.write( "\t\tATTR    : " + name + ": " + compact( c ) + "\n" );
+      }
     }
 
-    //metaData.getAttributes(  )
     //metaData.getIndexInfo
+    //getSuperTables
+    //getSuperTypes
   }
 
   private LinkedHashMap compact( final LinkedHashMap<String, Object> column )
@@ -264,6 +277,22 @@ public final class DatabaseDumper
       }
     } );
     return linkedHashMaps;
+  }
+
+  private List<LinkedHashMap<String, Object>> getAttributesColumns( final DatabaseMetaData metaData,
+                                                                    final String schema,
+                                                                    final String udtType )
+    throws Exception
+  {
+    if ( _dialect.equals( POSTGRESQL ) )
+    {
+      return new ArrayList<LinkedHashMap<String, Object>>();
+    }
+    else
+    {
+    final ResultSet columnResultSet = metaData.getAttributes( null, schema, udtType, null );
+    return extractFromRow( columnResultSet, ALLOWABLE_UDT_ATTRIBUTE_ATTRIBUTES );
+    }
   }
 
   private List<LinkedHashMap<String, Object>> getProcedureColumns( final DatabaseMetaData metaData,
