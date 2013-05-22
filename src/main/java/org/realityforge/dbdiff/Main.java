@@ -14,8 +14,18 @@ public class Main
   private static final int HELP_OPT = 1;
   private static final int QUIET_OPT = 'q';
   private static final int VERBOSE_OPT = 'v';
+  private static final int DATABASE_DRIVER_OPT = 2;
+  private static final int DATABASE_DIALECT_OPT = 3;
 
   private static final CLOptionDescriptor[] OPTIONS = new CLOptionDescriptor[]{
+    new CLOptionDescriptor( "database-driver",
+                            CLOptionDescriptor.ARGUMENT_REQUIRED,
+                            DATABASE_DRIVER_OPT,
+                            "The jdbc driver to load prior to connecting to the databases." ),
+    new CLOptionDescriptor( "database-dialect",
+                            CLOptionDescriptor.ARGUMENT_REQUIRED,
+                            DATABASE_DIALECT_OPT,
+                            "The database dialect to use during diff." ),
     new CLOptionDescriptor( "help",
                             CLOptionDescriptor.ARGUMENT_DISALLOWED,
                             HELP_OPT,
@@ -35,12 +45,15 @@ public class Main
   private static final int NO_DIFFERENCE_EXIT_CODE = 0;
   private static final int DIFFERENCE_EXIT_CODE = 1;
   private static final int ERROR_PARSING_ARGS_EXIT_CODE = 2;
+  private static final int ERROR_BAD_DRIVER_EXIT_CODE = 3;
 
   private static final int QUIET = 0;
   private static final int NORMAL = 1;
   private static final int VERBOSE = 1;
 
   private static int c_logLevel = NORMAL;
+  private static String c_databaseDriver;
+  private static String c_databaseDialect;
   private static String c_database1;
   private static String c_database2;
 
@@ -56,6 +69,18 @@ public class Main
     {
       info( "Performing difference between databases" );
     }
+
+    try
+    {
+      Class.forName( c_databaseDriver );
+    }
+    catch ( final Exception e )
+    {
+      error( "Unable to load database driver " + c_databaseDriver + " due to " + e.getMessage() );
+      System.exit( ERROR_BAD_DRIVER_EXIT_CODE );
+      return;
+    }
+
     final boolean difference = diff();
 
     if ( difference )
@@ -114,6 +139,21 @@ public class Main
             return false;
           }
           break;
+        case DATABASE_DRIVER_OPT:
+        {
+          c_databaseDriver = option.getArgument();
+          break;
+        }
+        case DATABASE_DIALECT_OPT:
+        {
+          c_databaseDialect = option.getArgument();
+          if ( !"mssql".equals( c_databaseDialect ) )
+          {
+            error( "Unsupported database dialect: " + c_databaseDialect );
+            return false;
+          }
+          break;
+        }
         case VERBOSE_OPT:
         {
           c_logLevel = VERBOSE;
@@ -131,6 +171,11 @@ public class Main
         }
 
       }
+    }
+    if ( null == c_databaseDriver )
+    {
+      error( "Database driver must be specified" );
+      return false;
     }
     if ( null == c_database1 || null == c_database2 )
     {
