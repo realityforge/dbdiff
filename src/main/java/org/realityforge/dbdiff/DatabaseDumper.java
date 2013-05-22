@@ -114,7 +114,6 @@ public final class DatabaseDumper
     //metaData.getProcedures(  )
     //metaData.getProcedureColumns(  )
     //metaData.getAttributes(  )
-    //metaData.getColumnPrivileges
     //metaData.getIndexInfo
   }
 
