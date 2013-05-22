@@ -39,8 +39,9 @@ public final class DatabaseDumper
   private static final String PK_NAME = "pk_name";
   private static final List<String> ALLOWABLE_PRIMARY_KEY_ATTRIBUTES =
     Arrays.asList( PK_NAME, "COLUMN_NAME", "KEY_SEQ" );
-
   private static final List<String> ALLOWABLE_TABLE_PRIV_ATTRIBUTES =
+    Arrays.asList( "GRANTOR", "GRANTEE", "PRIVILEGE", "IS_GRANTABLE" );
+  private static final List<String> ALLOWABLE_COLUMN_PRIV_ATTRIBUTES =
     Arrays.asList( "GRANTOR", "GRANTEE", "PRIVILEGE", "IS_GRANTABLE" );
 
   private final Connection _connection;
@@ -96,6 +97,12 @@ public final class DatabaseDumper
         final String columnName = (String) column.get( COLUMN_NAME );
         column.remove( COLUMN_NAME );
         w.write( "\t\tCOLUMN  : " + columnName + ": " + compact( column ) + "\n" );
+        final List<LinkedHashMap<String, Object>> privileges =
+          getColumnPrivileges( metaData, schema, tableName, columnName );
+        for ( final LinkedHashMap<String, Object> priv : privileges )
+        {
+          w.write( "\t\t\tPRIV    : " + compact( priv ) + "\n" );
+        }
       }
       for ( final LinkedHashMap<String, Object> fk : getImportedKeys( metaData, schema, tableName ) )
       {
@@ -104,6 +111,11 @@ public final class DatabaseDumper
         w.write( "\t\tFK      : " + fkName + ": " + compact( fk ) + "\n" );
       }
     }
+    //metaData.getProcedures(  )
+    //metaData.getProcedureColumns(  )
+    //metaData.getAttributes(  )
+    //metaData.getColumnPrivileges
+    //metaData.getIndexInfo
   }
 
   private LinkedHashMap compact( final LinkedHashMap<String, Object> column )
@@ -127,6 +139,16 @@ public final class DatabaseDumper
   {
     final ResultSet columnResultSet = metaData.getTablePrivileges( null, schema, tablename );
     return extractFromRow( columnResultSet, ALLOWABLE_TABLE_PRIV_ATTRIBUTES );
+  }
+
+  private List<LinkedHashMap<String, Object>> getColumnPrivileges( final DatabaseMetaData metaData,
+                                                               final String schema,
+                                                               final String tableName,
+                                                               final String columnName )
+    throws Exception
+  {
+    final ResultSet columnResultSet = metaData.getColumnPrivileges( null, schema, tableName, columnName );
+    return extractFromRow( columnResultSet, ALLOWABLE_COLUMN_PRIV_ATTRIBUTES );
   }
 
   private List<LinkedHashMap<String, Object>> getPrimaryKeys( final DatabaseMetaData metaData,
