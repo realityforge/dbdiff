@@ -76,7 +76,7 @@ public final class DatabaseDumper
     throws Exception
   {
     w.write( "Schema: " + schema + "\n" );
-    for ( final LinkedHashMap table : getTablesForSchema( metaData, schema ) )
+    for ( final LinkedHashMap<String, Object> table : getTablesForSchema( metaData, schema ) )
     {
       final String tableName = (String) table.get( TABLE_NAME );
       final String tableType = (String) table.get( TABLE_TYPE );
