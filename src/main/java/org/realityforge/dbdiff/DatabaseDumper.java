@@ -8,12 +8,30 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 public final class DatabaseDumper
 {
+  // This lists the allowable postgres table types and should be updated for sql server
+  private static final Collection<String> ALLOWABLE_TABLE_TYPES =
+    Arrays.asList( "INDEX", "SEQUENCE", "TABLE", "VIEW", "TYPE" );
+  private static final String TABLE_TYPE = "table_type";
+  private static final String TABLE_NAME = "table_name";
+  private static final List<String> ALLOWABLE_TABLE_ATTRIBUTES = Arrays.asList( TABLE_TYPE, TABLE_NAME );
+  private static final String COLUMN_NAME = "column_name";
+  private static final List<String> ALLOWABLE_COLUMN_ATTRIBUTES =
+    Arrays.asList( COLUMN_NAME, "COLUMN_DEF", "ORDINAL_POSITION", "SOURCE_DATA_TYPE", "SQL_DATA_TYPE",
+                   "NUM_PREC_RADIX", "COLUMN_SIZE", "TYPE_NAME", "IS_AUTOINCREMENT", "DECIMAL_DIGITS", "DATA_TYPE",
+                   "BUFFER_LENGTH", "CHAR_OCTET_LENGTH", "IS_NULLABLE", "NULLABLE", "SQL_DATETIME_SUB", "REMARKS",
+                   "SCOPE_CATLOG", "SCOPE_SCHEMA", "SCOPE_TABLE" );
+
   private final Connection _connection;
   private final String _dialect;
   private final List<String> _schemas;
@@ -31,31 +49,155 @@ public final class DatabaseDumper
     throws Exception
   {
     final DatabaseMetaData metaData = _connection.getMetaData();
-    final List<String> schema = getSchema( metaData );
-    for ( final String s : _schemas )
+    final List<String> schemaSet = getSchema( metaData );
+    for ( final String schema : _schemas )
     {
-      if ( schema.contains( s ) )
+      if ( schemaSet.contains( schema ) )
       {
-        w.write( "Schema: " + s + "\n" );
+        emitSchema( w, metaData, schema );
       }
       else
       {
-        w.write( "Missing Schema: " + s + "\n" );
+        w.write( "Missing Schema: " + schema + "\n" );
       }
     }
+  }
+
+  private void emitSchema( final Writer w, final DatabaseMetaData metaData, final String schema )
+    throws Exception
+  {
+    w.write( "Schema: " + schema + "\n" );
+    for ( final LinkedHashMap table : getTablesForSchema( metaData, schema ) )
+    {
+      final String tableName = (String) table.get( TABLE_NAME );
+      final String tableType = (String) table.get( TABLE_TYPE );
+      w.write( "\t" + tableType + ": " + tableName + "\n" );
+
+      for ( final LinkedHashMap<String, Object> column : getColumns( metaData, schema, tableName ) )
+      {
+        final String columnName = (String) column.get( COLUMN_NAME );
+        column.remove( COLUMN_NAME );
+        w.write( "\t\t" + columnName + ": " + compact( column ) + "\n" );
+      }
+    }
+  }
+
+  private LinkedHashMap compact( final LinkedHashMap<String, Object> column )
+  {
+    final ArrayList<String> keys = new ArrayList<String>();
+    keys.addAll( column.keySet() );
+    for ( final String key : keys )
+    {
+      if ( null == column.get( key ) )
+      {
+        column.remove( key );
+      }
+    }
+    return column;
+  }
+
+  private List<LinkedHashMap<String, Object>> getColumns( final DatabaseMetaData metaData,
+                                                          final String schema,
+                                                          final String tablename )
+    throws Exception
+  {
+    final ResultSet columnResultSet = metaData.getColumns( null, schema, tablename, null );
+    return extractFromRow( columnResultSet, ALLOWABLE_COLUMN_ATTRIBUTES );
+  }
+
+  private List<LinkedHashMap<String, Object>> getTablesForSchema( final DatabaseMetaData metaData,
+                                                                  final String schema )
+    throws Exception
+  {
+    final List<String> tableTypes = getTableTypes( metaData );
+    final ResultSet tablesResultSet =
+      metaData.getTables( null, schema, null, tableTypes.toArray( new String[ tableTypes.size() ] ) );
+    final List<LinkedHashMap<String, Object>> linkedHashMaps =
+      extractFromRow( tablesResultSet, ALLOWABLE_TABLE_ATTRIBUTES );
+    Collections.sort( linkedHashMaps, new Comparator<LinkedHashMap<String, Object>>()
+    {
+      @Override
+      public int compare( final LinkedHashMap<String, Object> lhs, final LinkedHashMap<String, Object> rhs )
+      {
+        final String left = (String) lhs.get( TABLE_TYPE ) + lhs.get( TABLE_NAME );
+        final String right = (String) rhs.get( TABLE_TYPE ) + rhs.get( TABLE_NAME );
+        return left.compareTo( right );
+      }
+    } );
+    return linkedHashMaps;
   }
 
   private List<String> getSchema( final DatabaseMetaData metaData )
     throws Exception
   {
-    return map( metaData.getSchemas(), new MapHandler<String>()
+    return extractFromRow( metaData.getSchemas(), "table_schem" );
+  }
+
+  private List<String> getTableTypes( final DatabaseMetaData metaData )
+    throws Exception
+  {
+    final List<String> supportedTypes =
+      extractFromRow( metaData.getTableTypes(), TABLE_TYPE );
+    final Iterator<String> iterator = supportedTypes.iterator();
+    while ( iterator.hasNext() )
+    {
+      final String type = iterator.next();
+      if ( !ALLOWABLE_TABLE_TYPES.contains( type ) )
+      {
+        iterator.remove();
+      }
+    }
+    return supportedTypes;
+  }
+
+  private <T> List<T> extractFromRow( final ResultSet resultSet, final String key )
+    throws Exception
+  {
+    return map( resultSet, new MapHandler<T>()
     {
       @Override
-      public String handle( final Map<String, Object> row )
+      public T handle( final Map<String, Object> row )
       {
-        return (String) row.get( "table_schem" );
+        return extract( row, key );
       }
     } );
+  }
+
+  private List<LinkedHashMap<String, Object>> extractFromRow( final ResultSet resultSet,
+                                                              final List<String> keys )
+    throws Exception
+  {
+    return map( resultSet, new MapHandler<LinkedHashMap<String, Object>>()
+    {
+      @SuppressWarnings( "unchecked" )
+      @Override
+      public LinkedHashMap<String, Object> handle( final Map<String, Object> row )
+      {
+        final LinkedHashMap tuple = new LinkedHashMap();
+        for ( final String key : keys )
+        {
+          tuple.put( key.toLowerCase(), extract( row, key ) );
+        }
+        return tuple;
+      }
+    } );
+  }
+
+  @SuppressWarnings( "unchecked" )
+  private <T> T extract( final Map<String, Object> row, final String key )
+  {
+    if ( row.containsKey( key.toLowerCase() ) )
+    {
+      return (T) row.get( key.toLowerCase() );
+    }
+    else if ( row.containsKey( key.toUpperCase() ) )
+    {
+      return (T) row.get( key.toUpperCase() );
+    }
+    else
+    {
+      throw new IllegalStateException( "Unexpected null value for key " + key + " when accessing " + row );
+    }
   }
 
   interface RowHandler
