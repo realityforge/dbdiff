@@ -68,6 +68,17 @@ public final class DatabaseDumper
                    "DECIMAL_DIGITS", "NUM_PREC_RADIX", "NULLABLE", "REMARKS", "ATTR_DEF", "SQL_DATA_TYPE",
                    "SQL_DATETIME_SUB", "CHAR_OCTET_LENGTH", "ORDINAL_POSITION", "IS_NULLABLE", "SCOPE_CATALOG",
                    "SCOPE_SCHEMA", "SCOPE_TABLE", "SOURCE_DATA_TYPE" );
+
+  private static final String FUNCTION_NAME = "function_name";
+  private static final List<String> ALLOWABLE_FUNCTION_ATTRIBUTES =
+    Arrays.asList( FUNCTION_NAME, "REMARKS", "FUNCTION_TYPE", "SPECIFIC_NAME" );
+  private static final String FUNCTION_COLUMN_NAME = "column_name";
+  private static final List<String> ALLOWABLE_FUNCTION_COLUMNS_ATTRIBUTES =
+    Arrays.asList( FUNCTION_COLUMN_NAME, "COLUMN_TYPE", "DATA_TYPE", "TYPE_NAME",
+                   "PRECISION", "LENGTH", "SCALE", "RADIX", "NULLABLE", "REMARKS", "CHAR_OCTET_LENGTH",
+                   "ORDINAL_POSITION", "IS_NULLABLE","SPECIFIC_NAME");
+
+
   public static final String POSTGRESQL = "postgres";
   public static final String MSSQL = "mssql";
 
@@ -175,8 +186,16 @@ public final class DatabaseDumper
         w.write( "\t\tATTR    : " + name + ": " + compact( c ) + "\n" );
       }
     }
-
-    //getSuperTypes
+    for ( final LinkedHashMap<String, Object> v : getFunctionsForSchema( metaData, schema ) )
+    {
+      final String key = (String) v.remove( FUNCTION_NAME );
+      w.write( "\tFUNC    : " + key + ": " + compact( v ) + "\n" );
+      for ( final LinkedHashMap<String, Object> c : getFunctionColumns( metaData, schema, key ) )
+      {
+        final String name = (String) c.remove( FUNCTION_COLUMN_NAME );
+        w.write( "\t\tPARAM   : " + name + ": " + compact( c ) + "\n" );
+      }
+    }
   }
 
   private LinkedHashMap compact( final LinkedHashMap<String, Object> column )
@@ -340,6 +359,48 @@ public final class DatabaseDumper
     return linkedHashMaps;
   }
 
+  private List<LinkedHashMap<String, Object>> getFunctionsForSchema( final DatabaseMetaData metaData,
+                                                                     final String schema )
+    throws Exception
+  {
+    if ( _dialect.equals( POSTGRESQL ) )
+    {
+      return new ArrayList<LinkedHashMap<String, Object>>();
+    }
+    else
+    {
+      final List<LinkedHashMap<String, Object>> linkedHashMaps =
+        extractFromRow( metaData.getFunctions( null, schema, null ), ALLOWABLE_FUNCTION_ATTRIBUTES );
+      Collections.sort( linkedHashMaps, new Comparator<LinkedHashMap<String, Object>>()
+      {
+        @Override
+        public int compare( final LinkedHashMap<String, Object> lhs, final LinkedHashMap<String, Object> rhs )
+        {
+          final String left = (String) lhs.get( FUNCTION_NAME );
+          final String right = (String) rhs.get( FUNCTION_NAME );
+          return left.compareTo( right );
+        }
+      } );
+      return linkedHashMaps;
+    }
+  }
+
+  private List<LinkedHashMap<String, Object>> getFunctionColumns( final DatabaseMetaData metaData,
+                                                                  final String schema,
+                                                                  final String udtType )
+    throws Exception
+  {
+    if ( _dialect.equals( POSTGRESQL ) )
+    {
+      return new ArrayList<LinkedHashMap<String, Object>>();
+    }
+    else
+    {
+      final ResultSet columnResultSet = metaData.getFunctionColumns( null, schema, udtType, null );
+      return extractFromRow( columnResultSet, ALLOWABLE_FUNCTION_COLUMNS_ATTRIBUTES );
+    }
+  }
+
   private List<LinkedHashMap<String, Object>> getAttributesColumns( final DatabaseMetaData metaData,
                                                                     final String schema,
                                                                     final String udtType )
@@ -351,8 +412,8 @@ public final class DatabaseDumper
     }
     else
     {
-    final ResultSet columnResultSet = metaData.getAttributes( null, schema, udtType, null );
-    return extractFromRow( columnResultSet, ALLOWABLE_UDT_ATTRIBUTE_ATTRIBUTES );
+      final ResultSet columnResultSet = metaData.getAttributes( null, schema, udtType, null );
+      return extractFromRow( columnResultSet, ALLOWABLE_UDT_ATTRIBUTE_ATTRIBUTES );
     }
   }
 
