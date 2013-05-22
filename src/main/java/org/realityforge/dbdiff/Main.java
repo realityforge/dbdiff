@@ -1,8 +1,12 @@
 package org.realityforge.dbdiff;
 
+import difflib.DiffUtils;
+import difflib.Patch;
+import java.io.StringWriter;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import org.realityforge.cli.CLArgsParser;
@@ -48,12 +52,12 @@ public class Main
                             CLOptionDescriptor.ARGUMENT_DISALLOWED,
                             QUIET_OPT,
                             "Do not output unless an error occurs, just return 0 on no difference.",
-                            new int[]{VERBOSE_OPT} ),
+                            new int[]{ VERBOSE_OPT } ),
     new CLOptionDescriptor( "verbose",
                             CLOptionDescriptor.ARGUMENT_DISALLOWED,
                             VERBOSE_OPT,
                             "Verbose output of differences.",
-                            new int[]{QUIET_OPT}),
+                            new int[]{ QUIET_OPT } ),
   };
 
   private static final int NO_DIFFERENCE_EXIT_CODE = 0;
@@ -64,7 +68,7 @@ public class Main
 
   private static final int QUIET = 0;
   private static final int NORMAL = 1;
-  private static final int VERBOSE = 1;
+  private static final int VERBOSE = 2;
 
   private static int c_logLevel = NORMAL;
   private static String c_databaseDriver;
@@ -82,7 +86,7 @@ public class Main
       return;
     }
 
-    if ( VERBOSE <= c_logLevel )
+    if ( isVerboseLogEnabled() )
     {
       info( "Performing difference between databases" );
     }
@@ -98,7 +102,7 @@ public class Main
 
     if ( difference )
     {
-      if ( NORMAL <= c_logLevel )
+      if ( isNormalLogEnabled() )
       {
         error( "Difference found between databases" );
       }
@@ -106,7 +110,7 @@ public class Main
     }
     else
     {
-      if ( NORMAL <= c_logLevel )
+      if ( isNormalLogEnabled() )
       {
         info( "No difference found between databases" );
       }
@@ -114,32 +118,27 @@ public class Main
     }
   }
 
+  private static boolean isNormalLogEnabled()
+  {
+    return NORMAL == c_logLevel || QUIET == c_logLevel;
+  }
+
+  private static boolean isVerboseLogEnabled()
+  {
+    return VERBOSE == c_logLevel;
+  }
+
   private static Driver loadDatabaseDriver()
   {
     try
     {
-      return (Driver)Class.forName( c_databaseDriver ).newInstance();
+      return (Driver) Class.forName( c_databaseDriver ).newInstance();
     }
     catch ( final Exception e )
     {
       error( "Unable to load database driver " + c_databaseDriver + " due to " + e );
       System.exit( ERROR_BAD_DRIVER_EXIT_CODE );
       return null;
-    }
-  }
-
-  static class DifferenceReporter
-  implements DatabaseDifferenceHandler
-  {
-    boolean _differenceFound;
-    @Override
-    public void databaseDifference( final String description, final boolean added )
-    {
-      if ( NORMAL <= c_logLevel )
-      {
-        info( description + " " + (added ? "added" : "removed") + " from database" );
-      }
-      _differenceFound = true;
     }
   }
 
@@ -150,15 +149,19 @@ public class Main
       final Connection connection1 = driver.connect( c_database1, c_dbProperties );
       final Connection connection2 = driver.connect( c_database2, c_dbProperties );
 
-      final DifferenceReporter handler = new DifferenceReporter();
-      final DatabaseDiffProcessor processor =
-        new DatabaseDiffProcessor( connection1, connection2, c_databaseDialect, handler );
-      processor.performDiff();
+      final List<String> diff = performDiff( connection1, connection2 );
+      if ( isNormalLogEnabled() )
+      {
+        for ( String s : diff )
+        {
+          info( s );
+        }
+      }
 
       connection1.close();
       connection2.close();
 
-      return handler._differenceFound;
+      return !diff.isEmpty();
     }
     catch ( final Throwable t )
     {
@@ -166,6 +169,42 @@ public class Main
       System.exit( ERROR_OTHER_EXIT_CODE );
       return false;
     }
+  }
+
+  public static List<String> performDiff( final Connection connection1,
+                                          final Connection connection2 )
+    throws Exception
+  {
+    final List<String> database1 =
+      Arrays.asList( databaseSchemaToString( connection1 ).split( "\n" ) );
+    final List<String> database2 =
+      Arrays.asList( databaseSchemaToString( connection2 ).split( "\n" ) );
+
+    // Compute diff. Get the Patch object. Patch is the container for computed deltas.
+    final Patch patch = DiffUtils.diff( database1, database2 );
+    return DiffUtils.generateUnifiedDiff( c_database1, c_database2, database1, patch, 2 );
+  }
+
+  private static String databaseSchemaToString( final Connection connection )
+    throws Exception
+  {
+    final DatabaseDumper dumper =
+      new DatabaseDumper( connection,
+                          c_databaseDialect,
+                          c_schemas.toArray( new String[ c_schemas.size() ] ) );
+    final StringWriter sw = new StringWriter();
+    dumper.dump( sw );
+    final String databaseDump = sw.toString();
+    if ( isVerboseLogEnabled() )
+    {
+      info( "---------------------------------------------------------------" );
+      info( "Database Dump: " + c_database1 );
+      info( "---------------------------------------------------------------" );
+      info( databaseDump );
+      info( "---------------------------------------------------------------" );
+    }
+
+    return databaseDump;
   }
 
   private static boolean processOptions( final String[] args )
@@ -254,7 +293,7 @@ public class Main
       error( "Two jdbc urls must supplied for the databases to check differences" );
       return false;
     }
-    if ( VERBOSE <= c_logLevel )
+    if ( isVerboseLogEnabled() )
     {
       info( "Database 1: " + c_database1 );
       info( "Database 2: " + c_database2 );
