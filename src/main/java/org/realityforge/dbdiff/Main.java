@@ -1,14 +1,12 @@
 package org.realityforge.dbdiff;
 
-import difflib.DiffUtils;
-import difflib.Patch;
-import java.io.StringWriter;
-import java.sql.Connection;
 import java.sql.Driver;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Properties;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Formatter;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 import org.realityforge.cli.CLArgsParser;
 import org.realityforge.cli.CLOption;
 import org.realityforge.cli.CLOptionDescriptor;
@@ -77,24 +75,21 @@ public class Main
 
   private static int c_logLevel = NORMAL;
   private static String c_databaseDriver;
-  private static String c_databaseDialect;
-  private static String c_database1;
-  private static String c_database2;
-  private static final Properties c_dbProperties = new Properties();
-  private static final ArrayList<String> c_schemas = new ArrayList<String>();
-  private static int c_contextSize = 10;
+  private static final DatabaseDiff c_diffTool = new DatabaseDiff();
+  private static final Logger c_logger = Logger.getAnonymousLogger();
 
   public static void main( final String[] args )
   {
+    setupLogger();
     if ( !processOptions( args ) )
     {
       System.exit( ERROR_PARSING_ARGS_EXIT_CODE );
       return;
     }
 
-    if ( isVerboseLogEnabled() )
+    if ( c_logger.isLoggable( Level.FINE ) )
     {
-      info( "Performing difference between databases" );
+      c_logger.log( Level.INFO, "Performing difference between databases" );
     }
 
     final Driver driver = loadDatabaseDriver();
@@ -104,34 +99,51 @@ public class Main
       return;
     }
 
-    final boolean difference = diff( driver );
+    c_diffTool.setDriver( driver );
+    boolean difference;
+    try
+    {
+      difference = c_diffTool.diff();
+    }
+    catch ( final Throwable t )
+    {
+      c_logger.log( Level.SEVERE, "Error: " + "Error performing diff: " + t );
+      System.exit( ERROR_OTHER_EXIT_CODE );
+      return;
+    }
 
     if ( difference )
     {
-      if ( isNormalLogEnabled() )
+      if ( c_logger.isLoggable( Level.INFO ) )
       {
-        error( "Difference found between databases" );
+        c_logger.log( Level.SEVERE, "Error: " + "Difference found between databases" );
       }
       System.exit( DIFFERENCE_EXIT_CODE );
     }
     else
     {
-      if ( isNormalLogEnabled() )
+      if ( c_logger.isLoggable( Level.INFO ) )
       {
-        info( "No difference found between databases" );
+        c_logger.log( Level.INFO, "No difference found between databases" );
       }
       System.exit( NO_DIFFERENCE_EXIT_CODE );
     }
   }
 
-  private static boolean isNormalLogEnabled()
+  private static void setupLogger()
   {
-    return NORMAL == c_logLevel || VERBOSE == c_logLevel;
-  }
-
-  private static boolean isVerboseLogEnabled()
-  {
-    return VERBOSE == c_logLevel;
+    c_logger.setUseParentHandlers( false );
+    final ConsoleHandler handler = new ConsoleHandler();
+    handler.setFormatter( new Formatter()
+    {
+      @Override
+      public String format( final LogRecord logRecord )
+      {
+        return logRecord.getMessage() + "\n";
+      }
+    } );
+    c_logger.addHandler( handler );
+    c_diffTool.setLogger( c_logger );
   }
 
   private static Driver loadDatabaseDriver()
@@ -142,75 +154,10 @@ public class Main
     }
     catch ( final Exception e )
     {
-      error( "Unable to load database driver " + c_databaseDriver + " due to " + e );
+      c_logger.log( Level.SEVERE, "Error: " + "Unable to load database driver " + c_databaseDriver + " due to " + e );
       System.exit( ERROR_BAD_DRIVER_EXIT_CODE );
       return null;
     }
-  }
-
-  private static boolean diff( final Driver driver )
-  {
-    try
-    {
-      final Connection connection1 = driver.connect( c_database1, c_dbProperties );
-      final Connection connection2 = driver.connect( c_database2, c_dbProperties );
-
-      final List<String> diff = performDiff( connection1, connection2 );
-      if ( isNormalLogEnabled() )
-      {
-        for ( String s : diff )
-        {
-          info( s );
-        }
-      }
-
-      connection1.close();
-      connection2.close();
-
-      return !diff.isEmpty();
-    }
-    catch ( final Throwable t )
-    {
-      error( "Error performing diff: " + t );
-      System.exit( ERROR_OTHER_EXIT_CODE );
-      return false;
-    }
-  }
-
-  public static List<String> performDiff( final Connection connection1,
-                                          final Connection connection2 )
-    throws Exception
-  {
-    final List<String> database1 =
-      Arrays.asList( databaseSchemaToString( connection1 ).split( "\n" ) );
-    final List<String> database2 =
-      Arrays.asList( databaseSchemaToString( connection2 ).split( "\n" ) );
-
-    // Compute diff. Get the Patch object. Patch is the container for computed deltas.
-    final Patch patch = DiffUtils.diff( database1, database2 );
-    return DiffUtils.generateUnifiedDiff( c_database1, c_database2, database1, patch, c_contextSize );
-  }
-
-  private static String databaseSchemaToString( final Connection connection )
-    throws Exception
-  {
-    final DatabaseDumper dumper =
-      new DatabaseDumper( connection,
-                          c_databaseDialect,
-                          c_schemas.toArray( new String[ c_schemas.size() ] ) );
-    final StringWriter sw = new StringWriter();
-    dumper.dump( sw );
-    final String databaseDump = sw.toString();
-    if ( isVerboseLogEnabled() )
-    {
-      info( "---------------------------------------------------------------" );
-      info( "Database Dump: " + c_database1 );
-      info( "---------------------------------------------------------------" );
-      info( databaseDump );
-      info( "---------------------------------------------------------------" );
-    }
-
-    return databaseDump;
   }
 
   private static boolean processOptions( final String[] args )
@@ -221,7 +168,7 @@ public class Main
     //Make sure that there was no errors parsing arguments
     if ( null != parser.getErrorString() )
     {
-      error( parser.getErrorString() );
+      c_logger.log( Level.SEVERE, "Error: " + parser.getErrorString() );
       return false;
     }
 
@@ -232,33 +179,33 @@ public class Main
       switch ( option.getId() )
       {
         case CLOption.TEXT_ARGUMENT:
-          if ( null == c_database1 )
+          if ( null == c_diffTool.getDatabase1() )
           {
-            c_database1 = option.getArgument();
+            c_diffTool.setDatabase1( option.getArgument() );
           }
-          else if ( null == c_database2 )
+          else if ( null == c_diffTool.getDatabase2() )
           {
-            c_database2 = option.getArgument();
+            c_diffTool.setDatabase2( option.getArgument() );
           }
           else
           {
-            error( "Unexpected 3rd test argument: " + option.getArgument() );
+            c_logger.log( Level.SEVERE, "Error: " + "Unexpected 3rd test argument: " + option.getArgument() );
             return false;
           }
           break;
         case CONTEXT_SIZE_OPT:
         {
-          c_contextSize = Integer.parseInt( option.getArgument() );
+          c_diffTool.setContextSize( Integer.parseInt( option.getArgument() ) );
           break;
         }
         case SCHEMA_OPT:
         {
-          c_schemas.add( option.getArgument() );
+          c_diffTool.getSchemas().add( option.getArgument() );
           break;
         }
         case DATABASE_PROPERTY_OPT:
         {
-          c_dbProperties.setProperty( option.getArgument(), option.getArgument( 1 ) );
+          c_diffTool.getDbProperties().setProperty( option.getArgument(), option.getArgument( 1 ) );
           break;
         }
         case DATABASE_DRIVER_OPT:
@@ -268,13 +215,13 @@ public class Main
         }
         case DATABASE_DIALECT_OPT:
         {
-          c_databaseDialect = option.getArgument();
-          if ( !DatabaseDumper.MSSQL.equals( c_databaseDialect ) &&
-            !DatabaseDumper.POSTGRESQL.equals( c_databaseDialect ))
+          c_diffTool.setDatabaseDialect( option.getArgument() );
+          if ( !DatabaseDumper.MSSQL.equals( c_diffTool.getDatabaseDialect() ) &&
+            !DatabaseDumper.POSTGRESQL.equals( c_diffTool.getDatabaseDialect() ))
           {
-            error( "Unsupported database dialect: " + c_databaseDialect +
-                   ". Supported dialects = " + DatabaseDumper.MSSQL + "," +
-                   DatabaseDumper.POSTGRESQL );
+            c_logger.log( Level.SEVERE, "Error: " + "Unsupported database dialect: " + c_diffTool.getDatabaseDialect() +
+                           ". Supported dialects = " + DatabaseDumper.MSSQL + "," +
+                           DatabaseDumper.POSTGRESQL );
             return false;
           }
           break;
@@ -299,26 +246,26 @@ public class Main
     }
     if ( null == c_databaseDriver )
     {
-      error( "Database driver must be specified" );
+      c_logger.log( Level.SEVERE, "Error: " + "Database driver must be specified" );
       return false;
     }
-    if ( null == c_databaseDialect )
+    if ( null == c_diffTool.getDatabaseDialect() )
     {
-      error( "Database dialect must be specified" );
+      c_logger.log( Level.SEVERE, "Error: " + "Database dialect must be specified" );
       return false;
     }
-    if ( null == c_database1 || null == c_database2 )
+    if ( null == c_diffTool.getDatabase1() || null == c_diffTool.getDatabase2() )
     {
-      error( "Two jdbc urls must supplied for the databases to check differences" );
+      c_logger.log( Level.SEVERE, "Error: " + "Two jdbc urls must supplied for the databases to check differences" );
       return false;
     }
-    if ( isVerboseLogEnabled() )
+    if ( c_logger.isLoggable( Level.FINE ) )
     {
-      info( "Database 1: " + c_database1 );
-      info( "Database 2: " + c_database2 );
-      info( "Database Dialect: " + c_databaseDialect );
-      info( "Database Properties: " + c_dbProperties );
-      info( "Schemas: " + c_schemas );
+      c_logger.log( Level.INFO, "Database 1: " + c_diffTool.getDatabase1() );
+      c_logger.log( Level.INFO, "Database 2: " + c_diffTool.getDatabase2() );
+      c_logger.log( Level.INFO, "Database Dialect: " + c_diffTool.getDatabaseDialect() );
+      c_logger.log( Level.INFO, "Database Properties: " + c_diffTool.getDbProperties() );
+      c_logger.log( Level.INFO, "Schemas: " + c_diffTool.getSchemas() );
     }
 
     return true;
@@ -342,16 +289,6 @@ public class Main
 
     msg.append( CLUtil.describeOptions( OPTIONS ).toString() );
 
-    info( msg.toString() );
-  }
-
-  private static void info( final String message )
-  {
-    System.out.println( message );
-  }
-
-  private static void error( final String message )
-  {
-    System.out.println( "Error: " + message );
+    c_logger.log( Level.INFO, msg.toString() );
   }
 }
