@@ -125,7 +125,7 @@ public final class DatabaseDumper
       final String key = (String) v.remove( PROCEDURE_NAME );
       w.write( "\tPROC    : " + key + ": " + compact( v ) + "\n" );
 
-        for ( final LinkedHashMap<String, Object> c : getProcedureColumns( metaData, schema, key ) )
+      for ( final LinkedHashMap<String, Object> c : getProcedureColumns( metaData, schema, key ) )
       {
         final String name = (String) c.remove( PROCEDURE_COLUMN_NAME );
         w.write( "\t\tPARAM   : " + name + ": " + compact( c ) + "\n" );
