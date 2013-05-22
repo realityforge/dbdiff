@@ -78,7 +78,7 @@ public class Main
 
   private static boolean diff()
   {
-    return System.getProperty( "X" ) != null;
+    return false;
   }
 
   private static boolean processOptions( final String[] args )
