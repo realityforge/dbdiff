@@ -8,10 +8,12 @@ define 'dbdiff' do
   compile.options.lint = 'all'
 
   compile.with :spice_cli,
+               :diffutils,
                :postgresql
 
   package(:jar)
   package(:jar, :classifier => 'all').tap do |jar|
     jar.merge(artifact(:spice_cli))
+    jar.merge(artifact(:diffutils))
   end
 end
