@@ -82,13 +82,13 @@ public final class DatabaseDumper
       {
         final String columnName = (String) column.get( COLUMN_NAME );
         column.remove( COLUMN_NAME );
-        w.write( "\t\t" + columnName + ": " + compact( column ) + "\n" );
+        w.write( "\t\tCOLUMN  : " + columnName + ": " + compact( column ) + "\n" );
       }
       for ( final LinkedHashMap<String, Object> fk : getImportedKeys( metaData, schema, tableName ) )
       {
         final String fkName = (String) fk.get( FK_NAME );
         fk.remove( FK_NAME );
-        w.write( "\t\t" + fkName + ": " + compact( fk ) + "\n" );
+        w.write( "\t\tFK      : " + fkName + ": " + compact( fk ) + "\n" );
       }
     }
   }
