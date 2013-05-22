@@ -54,6 +54,10 @@ public final class DatabaseDumper
     private static final String UDT_NAME = "type_name";
   private static final List<String> ALLOWABLE_UDT_ATTRIBUTES =
     Arrays.asList( UDT_NAME, "CLASS_NAME", "DATA_TYPE", "REMARKS", "BASE_TYPE" );
+  private static final String SUPER_UDT_NAME = "supertable_name";
+  private static final List<String> ALLOWABLE_SUPER_UDT_ATTRIBUTES =
+    Arrays.asList( SUPER_UDT_NAME, "SUPERTYPE_CAT", "SUPERTYPE_SCHEM", "SUPERTYPE_NAME" );
+
   private static final String PROCEDURE_COLUMN_NAME = "column_name";
   private static final List<String> ALLOWABLE_PROCEDURE_COLUMN_ATTRIBUTES =
     Arrays.asList( PROCEDURE_COLUMN_NAME, "COLUMN_TYPE", "DATA_TYPE", "TYPE_NAME", "PRECISION",
@@ -161,7 +165,10 @@ public final class DatabaseDumper
     {
       final String key = (String) v.remove( UDT_NAME );
       w.write( "\tUDT     : " + key + ": " + compact( v ) + "\n" );
-
+      for ( final LinkedHashMap<String, Object> types : getSuperTypes( metaData, schema, key ) )
+      {
+        w.write( "\t\tSUPER   : " + types.get( SUPER_UDT_NAME ) + "\n" );
+      }
       for ( final LinkedHashMap<String, Object> c : getAttributesColumns( metaData, schema, key ) )
       {
         final String name = (String) c.remove( UDT_ATTRIBUTE_NAME );
@@ -236,6 +243,22 @@ public final class DatabaseDumper
     {
       final ResultSet columnResultSet = metaData.getSuperTables( null, schema, tableName );
       return extractFromRow( columnResultSet, ALLOWABLE_SUPER_TABLE_ATTRIBUTES );
+    }
+  }
+
+  private List<LinkedHashMap<String, Object>> getSuperTypes( final DatabaseMetaData metaData,
+                                                              final String schema,
+                                                              final String udtName )
+    throws Exception
+  {
+    if ( _dialect.equals( POSTGRESQL ) )
+    {
+      return new ArrayList<LinkedHashMap<String, Object>>();
+    }
+    else
+    {
+      final ResultSet columnResultSet = metaData.getSuperTypes( null, schema, udtName );
+      return extractFromRow( columnResultSet, ALLOWABLE_SUPER_UDT_ATTRIBUTES );
     }
   }
 
