@@ -381,7 +381,7 @@ public final class DatabaseDumper
                                                                      final String schema )
     throws Exception
   {
-    if ( _dialect.equals( POSTGRESQL ) )
+    if ( _dialect.equals( POSTGRESQL ) || _dialect.equals( MSSQL ) )
     {
       return new ArrayList<LinkedHashMap<String, Object>>();
     }
