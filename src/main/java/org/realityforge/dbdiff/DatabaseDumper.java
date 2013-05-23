@@ -34,7 +34,7 @@ public final class DatabaseDumper
   private static final String INDEX_NAME = "index_name";
   private static final List<String> ALLOWABLE_INDEX_ATTRIBUTES =
     Arrays.asList( INDEX_NAME, "NON_UNIQUE", "INDEX_QUALIFIER", "TYPE", "ORDINAL_POSITION",
-                   "COLUMN_NAME", "ASC_OR_DESC", "CARDINALITY", "PAGES" );
+                   "COLUMN_NAME", "ASC_OR_DESC", "CARDINALITY" );
   private static final String SUPER_TABLE_NAME = "supertable_name";
   private static final List<String> ALLOWABLE_SUPER_TABLE_ATTRIBUTES = Arrays.asList( SUPER_TABLE_NAME );
   private static final String FK_NAME = "fk_name";
