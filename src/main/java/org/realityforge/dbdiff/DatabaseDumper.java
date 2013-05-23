@@ -30,7 +30,7 @@ public final class DatabaseDumper
     Arrays.asList( COLUMN_NAME, "COLUMN_DEF", "ORDINAL_POSITION", "SOURCE_DATA_TYPE", "SQL_DATA_TYPE",
                    "NUM_PREC_RADIX", "COLUMN_SIZE", "TYPE_NAME", "?IS_AUTOINCREMENT", "DECIMAL_DIGITS", "DATA_TYPE",
                    "BUFFER_LENGTH", "CHAR_OCTET_LENGTH", "IS_NULLABLE", "NULLABLE", "SQL_DATETIME_SUB", "REMARKS",
-                   "SCOPE_CATLOG", "SCOPE_SCHEMA", "SCOPE_TABLE" );
+                   "SCOPE_SCHEMA", "SCOPE_TABLE" );
   private static final String INDEX_NAME = "index_name";
   private static final List<String> ALLOWABLE_INDEX_ATTRIBUTES =
     Arrays.asList( INDEX_NAME, "NON_UNIQUE", "INDEX_QUALIFIER", "TYPE", "ORDINAL_POSITION",
@@ -39,7 +39,7 @@ public final class DatabaseDumper
   private static final List<String> ALLOWABLE_SUPER_TABLE_ATTRIBUTES = Arrays.asList( SUPER_TABLE_NAME );
   private static final String FK_NAME = "fk_name";
   private static final List<String> ALLOWABLE_FOREIGN_KEY_ATTRIBUTES =
-    Arrays.asList( FK_NAME, "PKTABLE_NAME", "PKCOLUMN_NAME", "FKTABLE_CAT", "FKTABLE_SCHEM",
+    Arrays.asList( FK_NAME, "PKTABLE_NAME", "PKCOLUMN_NAME", "FKTABLE_SCHEM",
                    "FKTABLE_NAME", "FKCOLUMN_NAME", "KEY_SEQ", "UPDATE_RULE", "DELETE_RULE",
                    "PK_NAME", "DEFERRABILITY" );
   private static final String PK_NAME = "pk_name";
@@ -61,7 +61,7 @@ public final class DatabaseDumper
     Arrays.asList( UDT_NAME, "CLASS_NAME", "DATA_TYPE", "REMARKS", "BASE_TYPE" );
   private static final String SUPER_UDT_NAME = "supertable_name";
   private static final List<String> ALLOWABLE_SUPER_UDT_ATTRIBUTES =
-    Arrays.asList( SUPER_UDT_NAME, "SUPERTYPE_CAT", "SUPERTYPE_SCHEM", "SUPERTYPE_NAME" );
+    Arrays.asList( SUPER_UDT_NAME, "SUPERTYPE_SCHEM", "SUPERTYPE_NAME" );
 
   private static final String PROCEDURE_COLUMN_NAME = "column_name";
   private static final List<String> ALLOWABLE_PROCEDURE_COLUMN_ATTRIBUTES =
@@ -71,7 +71,7 @@ public final class DatabaseDumper
   private static final List<String> ALLOWABLE_UDT_ATTRIBUTE_ATTRIBUTES =
     Arrays.asList( UDT_ATTRIBUTE_NAME, "TYPE_NAME", "DATA_TYPE", "ATTR_TYPE_NAME", "ATTR_SIZE",
                    "DECIMAL_DIGITS", "NUM_PREC_RADIX", "NULLABLE", "REMARKS", "ATTR_DEF", "SQL_DATA_TYPE",
-                   "SQL_DATETIME_SUB", "CHAR_OCTET_LENGTH", "ORDINAL_POSITION", "IS_NULLABLE", "SCOPE_CATALOG",
+                   "SQL_DATETIME_SUB", "CHAR_OCTET_LENGTH", "ORDINAL_POSITION", "IS_NULLABLE",
                    "SCOPE_SCHEMA", "SCOPE_TABLE", "SOURCE_DATA_TYPE" );
 
   private static final String FUNCTION_NAME = "function_name";
