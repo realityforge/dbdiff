@@ -6,6 +6,8 @@ import java.util.Properties;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Logger;
 import org.postgresql.Driver;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import static org.testng.Assert.*;
 
 public abstract class AbstractDatabaseDiffTest
@@ -34,12 +36,13 @@ public abstract class AbstractDatabaseDiffTest
     diff( schema, ddl1, ddl2, false );
   }
 
-  protected final void diff( final String schema,
-                             final String ddl1,
-                             final String ddl2,
-                             final boolean shouldMatch )
+  private void diff( final String schema,
+                     final String ddl1,
+                     final String ddl2,
+                     final boolean shouldMatch )
     throws Exception
   {
+    setupDatabases();
     final DatabaseDiff dd = newDatabaseDiff();
     dd.setLogger( newLogger() );
     dd.getSchemas().add( schema );
@@ -48,7 +51,14 @@ public abstract class AbstractDatabaseDiffTest
     executeSQL( ddl2, getDatabase2() );
 
     assertEquals( dd.diff(), !shouldMatch, "Does diff match expected" );
+    tearDownDatabases();
   }
+
+  protected abstract void setupDatabases()
+    throws Exception;
+
+  protected abstract void tearDownDatabases()
+    throws Exception;
 
   private DatabaseDiff newDatabaseDiff()
   {
