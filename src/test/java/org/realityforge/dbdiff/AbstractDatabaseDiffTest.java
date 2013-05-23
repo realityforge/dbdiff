@@ -102,6 +102,18 @@ public abstract class AbstractDatabaseDiffTest
     return sb.toString();
   }
 
+  protected final String[] quote( final String before,
+                                  final String after,
+                                  final String... elements )
+  {
+    final String[] results = new String[ elements.length ];
+    for ( int i = 0; i < results.length; i++ )
+    {
+      results[ i ] = before + elements[ i ] + after;
+    }
+    return results;
+  }
+
   protected final String s( final String... commands )
   {
     return join( ';', commands );
