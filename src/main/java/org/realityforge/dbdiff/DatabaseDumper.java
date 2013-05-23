@@ -493,7 +493,19 @@ public final class DatabaseDumper
         final LinkedHashMap tuple = new LinkedHashMap();
         for ( final String key : keys )
         {
-          tuple.put( key.toLowerCase(), extract( row, key ) );
+          final String accessKey;
+          final boolean optional;
+          if ( key.startsWith( "?" ) )
+          {
+            accessKey = key.substring( 1 );
+            optional = true;
+          }
+          else
+          {
+            accessKey = key;
+            optional = false;
+          }
+          tuple.put( accessKey.toLowerCase(), extract( row, accessKey, optional ) );
         }
         return tuple;
       }
@@ -503,6 +515,12 @@ public final class DatabaseDumper
   @SuppressWarnings( "unchecked" )
   private <T> T extract( final Map<String, Object> row, final String key )
   {
+    return extract( row, key, false );
+  }
+
+  @SuppressWarnings( "unchecked" )
+  private <T> T extract( final Map<String, Object> row, final String key, final boolean optional )
+  {
     if ( row.containsKey( key.toLowerCase() ) )
     {
       return (T) row.get( key.toLowerCase() );
@@ -511,9 +529,13 @@ public final class DatabaseDumper
     {
       return (T) row.get( key.toUpperCase() );
     }
-    else
+    else if( !optional )
     {
       throw new IllegalStateException( "Unexpected null value for key " + key + " when accessing " + row );
+    }
+    else
+    {
+      return null;
     }
   }
 
