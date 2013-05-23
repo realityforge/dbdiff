@@ -19,7 +19,7 @@ public class DatabaseDiff
   private String _database1;
   private String _database2;
   private final Properties _dbProperties = new Properties();
-  private String _databaseDialect;
+  private Dialect _dialect;
   private final ArrayList<String> _schemas = new ArrayList<String>();
   private int _contextSize = 10;
 
@@ -28,14 +28,14 @@ public class DatabaseDiff
     return _schemas;
   }
 
-  public String getDatabaseDialect()
+  public Dialect getDialect()
   {
-    return _databaseDialect;
+    return _dialect;
   }
 
-  public void setDatabaseDialect( final String databaseDialect )
+  public void setDialect( final Dialect dialect )
   {
-    _databaseDialect = databaseDialect;
+    _dialect = dialect;
   }
 
   public int getContextSize()
@@ -133,7 +133,7 @@ public class DatabaseDiff
   {
     final DatabaseDumper dumper =
       new DatabaseDumper( connection,
-                          _databaseDialect,
+                          _dialect,
                           _schemas.toArray( new String[ _schemas.size() ] ) );
     final StringWriter sw = new StringWriter();
     dumper.dump( sw );

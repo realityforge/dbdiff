@@ -1,6 +1,7 @@
 package org.realityforge.dbdiff;
 
 import java.sql.Driver;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
@@ -206,13 +207,15 @@ public class Main
         }
         case DATABASE_DIALECT_OPT:
         {
-          c_diffTool.setDatabaseDialect( option.getArgument() );
-          if ( !DatabaseDumper.MSSQL.equals( c_diffTool.getDatabaseDialect() ) &&
-            !DatabaseDumper.POSTGRESQL.equals( c_diffTool.getDatabaseDialect() ))
+          try
           {
-            c_logger.log( Level.SEVERE, "Error: " + "Unsupported database dialect: " + c_diffTool.getDatabaseDialect() +
-                           ". Supported dialects = " + DatabaseDumper.MSSQL + "," +
-                           DatabaseDumper.POSTGRESQL );
+            final Dialect dialect = Dialect.valueOf( option.getArgument() );
+            c_diffTool.setDialect( dialect );
+          }
+          catch ( final IllegalArgumentException e )
+          {
+            c_logger.log( Level.SEVERE, "Error: " + "Unsupported database dialect: " + option.getArgument() +
+                                        ". Supported dialects = " + Arrays.asList( Dialect.values() ) );
             return false;
           }
           break;
@@ -240,7 +243,7 @@ public class Main
       c_logger.log( Level.SEVERE, "Error: " + "Database driver must be specified" );
       return false;
     }
-    if ( null == c_diffTool.getDatabaseDialect() )
+    if ( null == c_diffTool.getDialect() )
     {
       c_logger.log( Level.SEVERE, "Error: " + "Database dialect must be specified" );
       return false;
@@ -254,7 +257,7 @@ public class Main
     {
       c_logger.log( Level.INFO, "Database 1: " + c_diffTool.getDatabase1() );
       c_logger.log( Level.INFO, "Database 2: " + c_diffTool.getDatabase2() );
-      c_logger.log( Level.INFO, "Database Dialect: " + c_diffTool.getDatabaseDialect() );
+      c_logger.log( Level.INFO, "Database Dialect: " + c_diffTool.getDialect() );
       c_logger.log( Level.INFO, "Database Properties: " + c_diffTool.getDbProperties() );
       c_logger.log( Level.INFO, "Schemas: " + c_diffTool.getSchemas() );
     }

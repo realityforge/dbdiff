@@ -84,15 +84,12 @@ public final class DatabaseDumper
                    "ORDINAL_POSITION", "IS_NULLABLE","SPECIFIC_NAME");
 
 
-  public static final String POSTGRESQL = "postgres";
-  public static final String MSSQL = "mssql";
-
   private final Connection _connection;
-  private final String _dialect;
+  private final Dialect _dialect;
   private final List<String> _schemas;
 
   public DatabaseDumper( final Connection connection,
-                         final String dialect,
+                         final Dialect dialect,
                          final String[] schemas )
   {
     _connection = connection;
@@ -272,7 +269,7 @@ public final class DatabaseDumper
                                                               final String tableName )
     throws Exception
   {
-    if ( _dialect.equals( POSTGRESQL ) )
+    if ( Dialect.postgresql == _dialect )
     {
       return new ArrayList<LinkedHashMap<String, Object>>();
     }
@@ -288,7 +285,7 @@ public final class DatabaseDumper
                                                               final String udtName )
     throws Exception
   {
-    if ( _dialect.equals( POSTGRESQL ) )
+    if ( Dialect.postgresql == _dialect )
     {
       return new ArrayList<LinkedHashMap<String, Object>>();
     }
@@ -381,7 +378,7 @@ public final class DatabaseDumper
                                                                      final String schema )
     throws Exception
   {
-    if ( _dialect.equals( POSTGRESQL ) || _dialect.equals( MSSQL ) )
+    if ( Dialect.postgresql == _dialect || Dialect.mssql == _dialect )
     {
       return new ArrayList<LinkedHashMap<String, Object>>();
     }
@@ -408,7 +405,7 @@ public final class DatabaseDumper
                                                                   final String udtType )
     throws Exception
   {
-    if ( _dialect.equals( POSTGRESQL ) )
+    if ( Dialect.postgresql == _dialect )
     {
       return new ArrayList<LinkedHashMap<String, Object>>();
     }
@@ -424,7 +421,7 @@ public final class DatabaseDumper
                                                                     final String udtType )
     throws Exception
   {
-    if ( _dialect.equals( POSTGRESQL ) )
+    if ( Dialect.postgresql == _dialect )
     {
       return new ArrayList<LinkedHashMap<String, Object>>();
     }
