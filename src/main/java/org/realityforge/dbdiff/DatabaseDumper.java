@@ -28,7 +28,7 @@ public final class DatabaseDumper
   private static final String COLUMN_NAME = "column_name";
   private static final List<String> ALLOWABLE_COLUMN_ATTRIBUTES =
     Arrays.asList( COLUMN_NAME, "COLUMN_DEF", "ORDINAL_POSITION", "SOURCE_DATA_TYPE", "SQL_DATA_TYPE",
-                   "NUM_PREC_RADIX", "COLUMN_SIZE", "TYPE_NAME", "IS_AUTOINCREMENT", "DECIMAL_DIGITS", "DATA_TYPE",
+                   "NUM_PREC_RADIX", "COLUMN_SIZE", "TYPE_NAME", "?IS_AUTOINCREMENT", "DECIMAL_DIGITS", "DATA_TYPE",
                    "BUFFER_LENGTH", "CHAR_OCTET_LENGTH", "IS_NULLABLE", "NULLABLE", "SQL_DATETIME_SUB", "REMARKS",
                    "SCOPE_CATLOG", "SCOPE_SCHEMA", "SCOPE_TABLE" );
   private static final String INDEX_NAME = "index_name";
