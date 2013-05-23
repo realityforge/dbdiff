@@ -9,6 +9,7 @@ define 'dbdiff' do
 
   compile.with :spice_cli,
                :diffutils,
+               :jtds,
                :postgresql
 
   test.using :testng
