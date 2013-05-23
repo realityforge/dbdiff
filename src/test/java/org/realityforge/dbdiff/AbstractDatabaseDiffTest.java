@@ -87,4 +87,23 @@ public abstract class AbstractDatabaseDiffTest
     connection1.createStatement().execute( sql );
     connection1.close();
   }
+
+  protected final String join( final char separator, final String... commands )
+  {
+    final StringBuilder sb = new StringBuilder();
+    for ( final String command : commands )
+    {
+      if ( 0 != sb.length() )
+      {
+        sb.append( separator );
+      }
+      sb.append( command );
+    }
+    return sb.toString();
+  }
+
+  protected final String s( final String... commands )
+  {
+    return join( ';', commands );
+  }
 }
