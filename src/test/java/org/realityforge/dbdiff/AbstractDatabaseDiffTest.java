@@ -6,8 +6,6 @@ import java.util.Properties;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Logger;
 import org.postgresql.Driver;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
 import static org.testng.Assert.*;
 
 public abstract class AbstractDatabaseDiffTest
@@ -25,6 +23,8 @@ public abstract class AbstractDatabaseDiffTest
                                     final String ddl2 )
     throws Exception
   {
+    assertSameDDLMatches( schema, ddl1 );
+    assertSameDDLMatches( schema, ddl2 );
     diff( schema, ddl1, ddl2, true );
   }
 
@@ -33,7 +33,15 @@ public abstract class AbstractDatabaseDiffTest
                                        final String ddl2 )
     throws Exception
   {
+    assertSameDDLMatches( schema, ddl1 );
+    assertSameDDLMatches( schema, ddl2 );
     diff( schema, ddl1, ddl2, false );
+  }
+
+  private void assertSameDDLMatches( final String schema, final String ddl1 )
+    throws Exception
+  {
+    diff( schema, ddl1, ddl1, true );
   }
 
   private void diff( final String schema,
