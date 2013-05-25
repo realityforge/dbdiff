@@ -105,7 +105,6 @@ public class PostgresDatabaseDiffTest
     assertNotMatch( schema, ddl1, ddl2 );
   }
 
-
   @Test
   public void emptySimpleTableWithChangedColumnScale()
     throws Exception
@@ -125,9 +124,80 @@ public class PostgresDatabaseDiffTest
     assertNotMatch( schema, ddl1, ddl2 );
   }
 
+  @Test
+  public void emptySimpleTableWithChangedColumnMultiplicity()
+    throws Exception
+  {
+    final String schema = "x";
+    final String table = "myTable";
+    final String ddl1 =
+      s( schema( schema ),
+         table( schema,
+                table,
+                column( "ID", "integer[]" ) ) );
+    final String ddl2 =
+      s( schema( schema ),
+         table( schema,
+                table,
+                column( "ID", "integer" ) ) );
+    assertNotMatch( schema, ddl1, ddl2 );
+  }
+
+  @Test
+  public void emptySimpleTableWithMissingIndex()
+    throws Exception
+  {
+    final String schema = "x";
+    final String table = "myTable";
+    final String ddl1 =
+      s( schema( schema ),
+         table( schema,
+                table,
+                column( "ID", "integer" ) ),
+         index( schema, table, "IX_MyIndex", null, "ID" ) );
+    final String ddl2 =
+      s( schema( schema ),
+         table( schema,
+                table,
+                column( "ID", "integer" ) ) );
+    assertNotMatch( schema, ddl1, ddl2 );
+  }
+
+  @Test
+  public void emptySimpleTableWithDifferentIndex()
+    throws Exception
+  {
+    final String schema = "x";
+    final String table = "myTable";
+    final String ddl1 =
+      s( schema( schema ),
+         table( schema,
+                table,
+                column( "ID", "integer[]" ) ),
+         index( schema, table, "IX_MyIndex", null, "ID" ) );
+    final String ddl2 =
+      s( schema( schema ),
+         table( schema,
+                table,
+                column( "ID", "integer[]" ) ),
+         index( schema, table, "IX_MyIndex", "GIN", "ID" ) );
+    assertNotMatch( schema, ddl1, ddl2 );
+  }
+
   protected final String schema( final String schema )
   {
     return "CREATE SCHEMA \"" + schema + "\"";
+  }
+
+  protected final String index( final String schema,
+                                final String table,
+                                final String name,
+                                final String indexType,
+                                final String... columns )
+  {
+    return "CREATE INDEX \"" + name +
+           "\" ON \"" + schema + "\".\"" + table + "\" " + ( null != indexType ? "USING " + indexType : "" ) +
+           "(" + join( ',', quote( columns ) ) + ")";
   }
 
   protected final String table( final String schema,
