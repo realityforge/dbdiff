@@ -222,21 +222,25 @@ public class PostgresDatabaseDiffTest
     return quote( "\"", "\"", commands );
   }
 
+  @Override
   protected final Dialect getDialect()
   {
     return Dialect.postgresql;
   }
 
+  @Override
   protected final Driver getDriver()
   {
     return new Driver();
   }
 
+  @Override
   protected final String getDatabase1()
   {
     return getBaseDbURL() + DB1_NAME;
   }
 
+  @Override
   protected final String getDatabase2()
   {
     return getBaseDbURL() + DB2_NAME;
