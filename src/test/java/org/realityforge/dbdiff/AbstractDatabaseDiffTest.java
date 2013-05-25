@@ -18,6 +18,11 @@ public abstract class AbstractDatabaseDiffTest
 
   protected abstract String getDatabase2();
 
+  protected Properties getDbProperties()
+  {
+    return new Properties();
+  }
+
   protected final void assertMatch( final String schema,
                                     final String ddl1,
                                     final String ddl2 )
@@ -91,7 +96,7 @@ public abstract class AbstractDatabaseDiffTest
   protected final void executeSQL( final String sql, final String database )
     throws SQLException
   {
-    final Connection connection1 = getDriver().connect( database, new Properties() );
+    final Connection connection1 = getDriver().connect( database, getDbProperties() );
     connection1.createStatement().execute( sql );
     connection1.close();
   }
