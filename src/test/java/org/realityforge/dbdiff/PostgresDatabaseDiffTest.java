@@ -1,5 +1,6 @@
 package org.realityforge.dbdiff;
 
+import java.util.Properties;
 import org.postgresql.Driver;
 import org.testng.annotations.Test;
 
@@ -226,6 +227,23 @@ public class PostgresDatabaseDiffTest
   protected final Dialect getDialect()
   {
     return Dialect.postgresql;
+  }
+
+  @Override
+  protected final Properties getDbProperties()
+  {
+    final Properties properties = new Properties();
+    final String username = System.getenv( "TEST_PG_DB_USER" );
+    if ( null != username )
+    {
+      properties.setProperty( "user", username );
+    }
+    final String password = System.getenv( "TEST_PG_DB_PASSWORD" );
+    if ( null != password )
+    {
+      properties.setProperty( "password", password );
+    }
+    return properties;
   }
 
   @Override
