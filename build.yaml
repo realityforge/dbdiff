@@ -6,5 +6,5 @@ repositories:
 artifacts:
   spice_cli: spice:spice-cli:jar:1.0
   postgresql: postgresql:postgresql:jar:9.1-901.jdbc4
-  jtds: net.sourceforge.jtds:jtds:jar:1.2.4
+  jtds: net.sourceforge.jtds:jtds:jar:1.2.7
   diffutils: com.googlecode.java-diff-utils:diffutils:jar:1.2.1
