@@ -29,6 +29,8 @@ public class PostgresDatabaseDiffTest
     final String ddl1 = schema( schema );
     final String ddl2 = "";
     assertNotMatch( schema, ddl1, ddl2 );
+    assertDiffOutput( "^\\-Schema\\: x" );
+    assertDiffOutput( "^\\+Missing Schema\\: x" );
   }
 
   @Test
@@ -65,6 +67,10 @@ public class PostgresDatabaseDiffTest
                 column( "TS", "timestamp NOT NULL" ),
                 pkInlineConstraint( "PK_" + table, "ID" ) ) );
     assertNotMatch( schema, ddl1, ddl2 );
+    assertDiffOutput( "^\\-\t\tCOLUMN  : TS: \\{ordinal_position=2,.*",
+                      "^\\+\t\tCOLUMN  : NewOne: \\{ordinal_position=2,.*",
+                      "^\\+\t\tCOLUMN  : TS: \\{ordinal_position=3,.*",
+                      "^\\+\t\t\tPRIV .*" );
   }
 
   @Test
@@ -85,6 +91,10 @@ public class PostgresDatabaseDiffTest
                 column( "ID", "integer" ),
                 pkInlineConstraint( "PK_" + table, "ID" ) ) );
     assertNotMatch( schema, ddl1, ddl2 );
+    assertDiffOutput( "^\\+\tINDEX\\: PK_myTable$",
+                      "^\\+\t\tGEN     \\: ctid\\: .*",
+                      "^\\+\t\tCOLUMN  \\: ID\\: \\{ordinal_position=1,.*",
+                      "^\\+\t\tPK      \\: PK_myTable\\: \\{column_name=ID,.*" );
   }
 
   @Test
@@ -104,6 +114,8 @@ public class PostgresDatabaseDiffTest
                 table,
                 column( "ID", "integer" ) ) );
     assertNotMatch( schema, ddl1, ddl2 );
+    assertDiffOutput( "\\-\t\tCOLUMN  \\: ID\\: .* is_nullable=NO, nullable=0}",
+                      "\\+\t\tCOLUMN  \\: ID\\: .* is_nullable=YES, nullable=1}" );
   }
 
   @Test
@@ -123,6 +135,8 @@ public class PostgresDatabaseDiffTest
                 table,
                 column( "ID", "integer" ) ) );
     assertNotMatch( schema, ddl1, ddl2 );
+    assertDiffOutput( "\\-\t\tCOLUMN  \\: ID\\: .* type_name=_int4,.*",
+                      "\\+\t\tCOLUMN  \\: ID\\: .* type_name=int4,.*" );
   }
 
   @Test
@@ -142,6 +156,8 @@ public class PostgresDatabaseDiffTest
                 table,
                 column( "ID", "integer" ) ) );
     assertNotMatch( schema, ddl1, ddl2 );
+    assertDiffOutput( "\\-\t\tCOLUMN  \\: ID\\: .* type_name=_int4,.*",
+                      "\\+\t\tCOLUMN  \\: ID\\: .* type_name=int4,.*" );
   }
 
   @Test
@@ -162,6 +178,9 @@ public class PostgresDatabaseDiffTest
                 table,
                 column( "ID", "integer" ) ) );
     assertNotMatch( schema, ddl1, ddl2 );
+    assertDiffOutput( "\\-\tINDEX\\: IX_MyIndex",
+                      "\\-\t\tGEN     \\: ctid\\:.*",
+                      "\\-\t\tCOLUMN  \\: ID\\:.*" );
   }
 
   @Test
@@ -183,6 +202,10 @@ public class PostgresDatabaseDiffTest
                 column( "ID", "integer[]" ) ),
          index( schema, table, "IX_MyIndex", "GIN", "ID" ) );
     assertNotMatch( schema, ddl1, ddl2 );
+    assertDiffOutput( "\\-\t\tCOLUMN  \\: ID\\: .* data_type=2003,.*",
+                      "\\+\t\tCOLUMN  \\: ID\\: .* data_type=4,.*",
+                      "\\-\t\tIX      \\: IX_MyIndex\\: .* asc_or_desc=A, .*",
+                      "\\+\t\tIX      \\: IX_MyIndex\\: .*" );
   }
 
   protected final String schema( final String schema )
