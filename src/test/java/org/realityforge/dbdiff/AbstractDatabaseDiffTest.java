@@ -2,14 +2,40 @@ package org.realityforge.dbdiff;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Properties;
 import java.util.logging.ConsoleHandler;
+import java.util.logging.Formatter;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import org.postgresql.Driver;
 import static org.testng.Assert.*;
 
 public abstract class AbstractDatabaseDiffTest
 {
+  private final boolean _emitDiff = System.getProperty( "test.emit.diff", "false" ).equalsIgnoreCase( "true" );
+  private ArrayList<String> _output = new ArrayList<String>();
+
+  final class CollectorFormatter
+    extends Formatter
+  {
+    @Override
+    public String format( final LogRecord logRecord )
+    {
+      _output.add( logRecord.getMessage() );
+      if ( _emitDiff )
+      {
+        return logRecord.getMessage() + "\n";
+      }
+      else
+      {
+        return "";
+      }
+    }
+  }
+
   protected abstract Dialect getDialect();
 
   protected abstract Driver getDriver();
@@ -23,11 +49,68 @@ public abstract class AbstractDatabaseDiffTest
     return new Properties();
   }
 
+  protected final void assertDiffOutput( final String regex )
+  {
+    final Pattern pattern = Pattern.compile( regex );
+    for ( final String line : _output )
+    {
+      if ( pattern.matcher( line ).matches() )
+      {
+        return;
+      }
+    }
+    System.out.println( "Failed to match output " + regex + " in:" );
+    for ( final String line : _output )
+    {
+      System.out.println( line );
+    }
+    fail( "Failed to match output " + regex + " in:" );
+  }
+
+  protected final void assertDiffOutput( final String... regexs )
+  {
+    int line = 0;
+    int regexIndex = 0;
+    boolean matched = true;
+    while ( regexIndex < regexs.length )
+    {
+      final Pattern pattern = Pattern.compile( regexs[ regexIndex ] );
+      matched = false;
+      while ( line < _output.size() )
+      {
+        final String text = _output.get( line );
+        line++;
+        if ( pattern.matcher( text ).matches() )
+        {
+          matched = true;
+          break;
+        }
+      }
+      if ( !matched )
+      {
+        break;
+      }
+      regexIndex++;
+    }
+    if( matched )
+    {
+      return;
+    }
+    final String errorMessage =
+      "Failed to match output " + Arrays.asList( regexs ) + " at " + regexs[regexIndex] + " in:";
+    System.out.println( errorMessage );
+    for ( final String l : _output )
+    {
+      System.out.println( l );
+    }
+    fail( errorMessage );
+  }
   protected final void assertMatch( final String schema,
                                     final String ddl1,
                                     final String ddl2 )
     throws Exception
   {
+    purgeDiffOutput();
     assertSameDDLMatches( schema, ddl1 );
     assertSameDDLMatches( schema, ddl2 );
     diff( schema, ddl1, ddl2, true );
@@ -38,6 +121,7 @@ public abstract class AbstractDatabaseDiffTest
                                        final String ddl2 )
     throws Exception
   {
+    purgeDiffOutput();
     assertSameDDLMatches( schema, ddl1 );
     assertSameDDLMatches( schema, ddl2 );
     diff( schema, ddl1, ddl2, false );
@@ -73,6 +157,11 @@ public abstract class AbstractDatabaseDiffTest
   protected abstract void tearDownDatabases()
     throws Exception;
 
+  private void purgeDiffOutput()
+  {
+    _output.clear();
+  }
+
   private DatabaseDiff newDatabaseDiff()
   {
     final DatabaseDiff dd = new DatabaseDiff();
@@ -88,7 +177,7 @@ public abstract class AbstractDatabaseDiffTest
     final Logger logger = Logger.getAnonymousLogger();
     logger.setUseParentHandlers( false );
     final ConsoleHandler handler = new ConsoleHandler();
-    handler.setFormatter( new RawFormatter() );
+    handler.setFormatter( new CollectorFormatter() );
     logger.addHandler( handler );
     return logger;
   }
