@@ -68,11 +68,6 @@ public class Main
   private static final int ERROR_BAD_DRIVER_EXIT_CODE = 3;
   private static final int ERROR_OTHER_EXIT_CODE = 4;
 
-  private static final int QUIET = 0;
-  private static final int NORMAL = 1;
-  private static final int VERBOSE = 2;
-
-  private static int c_logLevel = NORMAL;
   private static String c_databaseDriver;
   private static final DatabaseDiff c_diffTool = new DatabaseDiff();
   private static final Logger c_logger = Logger.getAnonymousLogger();
@@ -222,12 +217,12 @@ public class Main
         }
         case VERBOSE_OPT:
         {
-          c_logLevel = VERBOSE;
+          c_logger.setLevel( Level.ALL );
           break;
         }
         case QUIET_OPT:
         {
-          c_logLevel = QUIET;
+          c_logger.setLevel( Level.WARNING );
           break;
         }
         case HELP_OPT:
