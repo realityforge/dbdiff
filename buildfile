@@ -3,8 +3,8 @@ require 'buildr/git_auto_version'
 desc 'dbdiff: List differences between databases'
 define 'dbdiff' do
   project.group = 'org.realityforge.dbdiff'
-  compile.options.source = '1.6'
-  compile.options.target = '1.6'
+  compile.options.source = '1.7'
+  compile.options.target = '1.7'
   compile.options.lint = 'all'
 
   compile.with :spice_cli,
