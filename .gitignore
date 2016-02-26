@@ -1,10 +1,9 @@
-/target
-/reports
-/*.iml
+*.iml
 /*.ipr
 /*.iws
-/.idea
-/_buildr.rb
-/bin
 /.bundle
 /Gemfile.lock
+/_buildr.rb
+/bin
+/reports
+/target
