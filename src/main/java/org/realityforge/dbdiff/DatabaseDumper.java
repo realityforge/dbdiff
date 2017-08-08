@@ -206,7 +206,7 @@ public final class DatabaseDumper
 
   private LinkedHashMap compact( final LinkedHashMap<String, Object> column )
   {
-    final ArrayList<String> keys = new ArrayList<String>();
+    final ArrayList<String> keys = new ArrayList<>();
     keys.addAll( column.keySet() );
     for ( final String key : keys )
     {
@@ -271,7 +271,7 @@ public final class DatabaseDumper
   {
     if ( Dialect.postgresql == _dialect )
     {
-      return new ArrayList<LinkedHashMap<String, Object>>();
+      return new ArrayList<>();
     }
     else
     {
@@ -287,7 +287,7 @@ public final class DatabaseDumper
   {
     if ( Dialect.postgresql == _dialect )
     {
-      return new ArrayList<LinkedHashMap<String, Object>>();
+      return new ArrayList<>();
     }
     else
     {
@@ -380,7 +380,7 @@ public final class DatabaseDumper
   {
     if ( Dialect.postgresql == _dialect || Dialect.mssql == _dialect )
     {
-      return new ArrayList<LinkedHashMap<String, Object>>();
+      return new ArrayList<>();
     }
     else
     {
@@ -407,7 +407,7 @@ public final class DatabaseDumper
   {
     if ( Dialect.postgresql == _dialect )
     {
-      return new ArrayList<LinkedHashMap<String, Object>>();
+      return new ArrayList<>();
     }
     else
     {
@@ -423,7 +423,7 @@ public final class DatabaseDumper
   {
     if ( Dialect.postgresql == _dialect )
     {
-      return new ArrayList<LinkedHashMap<String, Object>>();
+      return new ArrayList<>();
     }
     else
     {
@@ -558,7 +558,7 @@ public final class DatabaseDumper
   private <T> List<T> map( final ResultSet resultSet, final MapHandler<T> handler )
     throws Exception
   {
-    final ArrayList<T> results = new ArrayList<T>();
+    final ArrayList<T> results = new ArrayList<>();
     each( resultSet, new RowHandler()
     {
       @Override
@@ -575,10 +575,10 @@ public final class DatabaseDumper
   {
     final ResultSetMetaData md = resultSet.getMetaData();
     final int columns = md.getColumnCount();
-    final ArrayList<Map<String, Object>> list = new ArrayList<Map<String, Object>>();
+    final ArrayList<Map<String, Object>> list = new ArrayList<>();
     while ( resultSet.next() )
     {
-      final HashMap<String, Object> row = new HashMap<String, Object>();
+      final HashMap<String, Object> row = new HashMap<>();
       for ( int i = 1; i <= columns; ++i )
       {
         row.put( md.getColumnName( i ), resultSet.getObject( i ) );

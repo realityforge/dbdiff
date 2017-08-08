@@ -16,7 +16,7 @@ import static org.testng.Assert.*;
 public abstract class AbstractDatabaseDiffTest
 {
   private final boolean _emitDiff = System.getProperty( "test.emit.diff", "false" ).equalsIgnoreCase( "true" );
-  private ArrayList<String> _output = new ArrayList<String>();
+  private ArrayList<String> _output = new ArrayList<>();
 
   final class CollectorFormatter
     extends Formatter

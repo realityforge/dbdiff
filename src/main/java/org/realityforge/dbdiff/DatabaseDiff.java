@@ -20,7 +20,7 @@ public class DatabaseDiff
   private String _database2;
   private final Properties _dbProperties = new Properties();
   private Dialect _dialect;
-  private final ArrayList<String> _schemas = new ArrayList<String>();
+  private final ArrayList<String> _schemas = new ArrayList<>();
   private int _contextSize = 10;
 
   public ArrayList<String> getSchemas()
