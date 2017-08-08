@@ -323,7 +323,7 @@ public final class DatabaseDumper
       metaData.getTables( null, schema, null, tableTypes.toArray( new String[ tableTypes.size() ] ) );
     final List<LinkedHashMap<String, Object>> linkedHashMaps =
       extractFromRow( tablesResultSet, ALLOWABLE_TABLE_ATTRIBUTES );
-    Collections.sort( linkedHashMaps, ( lhs, rhs ) -> {
+    linkedHashMaps.sort( ( lhs, rhs ) -> {
       final String left = (String) lhs.get( TABLE_TYPE ) + lhs.get( TABLE_NAME );
       final String right = (String) rhs.get( TABLE_TYPE ) + rhs.get( TABLE_NAME );
       return left.compareTo( right );
@@ -337,7 +337,7 @@ public final class DatabaseDumper
   {
     final List<LinkedHashMap<String, Object>> linkedHashMaps =
       extractFromRow( metaData.getProcedures( null, schema, null ), ALLOWABLE_PROCEDURE_ATTRIBUTES );
-    Collections.sort( linkedHashMaps, ( lhs, rhs ) -> {
+    linkedHashMaps.sort( ( lhs, rhs ) -> {
       final String left = (String) lhs.get( PROCEDURE_NAME );
       final String right = (String) rhs.get( PROCEDURE_NAME );
       return left.compareTo( right );
@@ -351,7 +351,7 @@ public final class DatabaseDumper
   {
     final List<LinkedHashMap<String, Object>> linkedHashMaps =
       extractFromRow( metaData.getUDTs( null, schema, null, null ), ALLOWABLE_UDT_ATTRIBUTES );
-    Collections.sort( linkedHashMaps, ( lhs, rhs ) -> {
+    linkedHashMaps.sort( ( lhs, rhs ) -> {
       final String left = (String) lhs.get( UDT_NAME );
       final String right = (String) rhs.get( UDT_NAME );
       return left.compareTo( right );
@@ -371,7 +371,7 @@ public final class DatabaseDumper
     {
       final List<LinkedHashMap<String, Object>> linkedHashMaps =
         extractFromRow( metaData.getFunctions( null, schema, null ), ALLOWABLE_FUNCTION_ATTRIBUTES );
-      Collections.sort( linkedHashMaps, ( lhs, rhs ) -> {
+      linkedHashMaps.sort( ( lhs, rhs ) -> {
         final String left = (String) lhs.get( FUNCTION_NAME );
         final String right = (String) rhs.get( FUNCTION_NAME );
         return left.compareTo( right );
