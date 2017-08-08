@@ -11,7 +11,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -428,17 +427,8 @@ public final class DatabaseDumper
   private List<String> getTableTypes( final DatabaseMetaData metaData )
     throws Exception
   {
-    final List<String> supportedTypes =
-      extractFromRow( metaData.getTableTypes(), TABLE_TYPE );
-    final Iterator<String> iterator = supportedTypes.iterator();
-    while ( iterator.hasNext() )
-    {
-      final String type = iterator.next();
-      if ( !ALLOWABLE_TABLE_TYPES.contains( type ) )
-      {
-        iterator.remove();
-      }
-    }
+    final List<String> supportedTypes = extractFromRow( metaData.getTableTypes(), TABLE_TYPE );
+    supportedTypes.removeIf( type -> !ALLOWABLE_TABLE_TYPES.contains( type ) );
     return supportedTypes;
   }
 
