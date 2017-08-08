@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -56,7 +55,7 @@ public final class DatabaseDumper
     Arrays.asList( "GRANTOR", "GRANTEE", "PRIVILEGE", "IS_GRANTABLE" );
   private static final String PROCEDURE_NAME = "procedure_name";
   private static final List<String> ALLOWABLE_PROCEDURE_ATTRIBUTES = Arrays.asList( "procedure_type", PROCEDURE_NAME );
-    private static final String UDT_NAME = "type_name";
+  private static final String UDT_NAME = "type_name";
   private static final List<String> ALLOWABLE_UDT_ATTRIBUTES =
     Arrays.asList( UDT_NAME, "CLASS_NAME", "DATA_TYPE", "REMARKS", "BASE_TYPE" );
   private static final String SUPER_UDT_NAME = "supertable_name";
@@ -66,7 +65,7 @@ public final class DatabaseDumper
   private static final String PROCEDURE_COLUMN_NAME = "column_name";
   private static final List<String> ALLOWABLE_PROCEDURE_COLUMN_ATTRIBUTES =
     Arrays.asList( PROCEDURE_COLUMN_NAME, "COLUMN_TYPE", "DATA_TYPE", "TYPE_NAME", "PRECISION",
-                   "LENGTH", "SCALE", "RADIX", "NULLABLE", "REMARKS");
+                   "LENGTH", "SCALE", "RADIX", "NULLABLE", "REMARKS" );
   private static final String UDT_ATTRIBUTE_NAME = "attr_name";
   private static final List<String> ALLOWABLE_UDT_ATTRIBUTE_ATTRIBUTES =
     Arrays.asList( UDT_ATTRIBUTE_NAME, "TYPE_NAME", "DATA_TYPE", "ATTR_TYPE_NAME", "ATTR_SIZE",
@@ -81,8 +80,7 @@ public final class DatabaseDumper
   private static final List<String> ALLOWABLE_FUNCTION_COLUMNS_ATTRIBUTES =
     Arrays.asList( FUNCTION_COLUMN_NAME, "COLUMN_TYPE", "DATA_TYPE", "TYPE_NAME",
                    "PRECISION", "LENGTH", "SCALE", "RADIX", "NULLABLE", "REMARKS", "CHAR_OCTET_LENGTH",
-                   "ORDINAL_POSITION", "IS_NULLABLE","SPECIFIC_NAME");
-
+                   "ORDINAL_POSITION", "IS_NULLABLE", "SPECIFIC_NAME" );
 
   private final Connection _connection;
   private final Dialect _dialect;
@@ -219,8 +217,8 @@ public final class DatabaseDumper
   }
 
   private List<LinkedHashMap<String, Object>> getTablePrivileges( final DatabaseMetaData metaData,
-                                                               final String schema,
-                                                               final String tablename )
+                                                                  final String schema,
+                                                                  final String tablename )
     throws Exception
   {
     final ResultSet columnResultSet = metaData.getTablePrivileges( null, schema, tablename );
@@ -228,9 +226,9 @@ public final class DatabaseDumper
   }
 
   private List<LinkedHashMap<String, Object>> getColumnPrivileges( final DatabaseMetaData metaData,
-                                                               final String schema,
-                                                               final String tableName,
-                                                               final String columnName )
+                                                                   final String schema,
+                                                                   final String tableName,
+                                                                   final String columnName )
     throws Exception
   {
     final ResultSet columnResultSet = metaData.getColumnPrivileges( null, schema, tableName, columnName );
@@ -238,8 +236,8 @@ public final class DatabaseDumper
   }
 
   private List<LinkedHashMap<String, Object>> getPrimaryKeys( final DatabaseMetaData metaData,
-                                                               final String schema,
-                                                               final String tablename )
+                                                              final String schema,
+                                                              final String tablename )
     throws Exception
   {
     final ResultSet columnResultSet = metaData.getPrimaryKeys( null, schema, tablename );
@@ -281,8 +279,8 @@ public final class DatabaseDumper
   }
 
   private List<LinkedHashMap<String, Object>> getSuperTypes( final DatabaseMetaData metaData,
-                                                              final String schema,
-                                                              final String udtName )
+                                                             final String schema,
+                                                             final String udtName )
     throws Exception
   {
     if ( Dialect.postgresql == _dialect )
@@ -454,8 +452,8 @@ public final class DatabaseDumper
                                                               final List<String> keys )
     throws Exception
   {
-    return map( resultSet, (MapHandler<LinkedHashMap<String, Object>>) row -> {
-      final LinkedHashMap tuple = new LinkedHashMap();
+    return map( resultSet, row -> {
+      final LinkedHashMap<String, Object> tuple = new LinkedHashMap<>();
       for ( final String key : keys )
       {
         final String accessKey;
@@ -493,7 +491,7 @@ public final class DatabaseDumper
     {
       return (T) row.get( key.toUpperCase() );
     }
-    else if( !optional )
+    else if ( !optional )
     {
       throw new IllegalStateException( "Unexpected null value for key " + key + " when accessing " + row );
     }
