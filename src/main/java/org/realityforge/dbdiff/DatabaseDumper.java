@@ -323,15 +323,10 @@ public final class DatabaseDumper
       metaData.getTables( null, schema, null, tableTypes.toArray( new String[ tableTypes.size() ] ) );
     final List<LinkedHashMap<String, Object>> linkedHashMaps =
       extractFromRow( tablesResultSet, ALLOWABLE_TABLE_ATTRIBUTES );
-    Collections.sort( linkedHashMaps, new Comparator<LinkedHashMap<String, Object>>()
-    {
-      @Override
-      public int compare( final LinkedHashMap<String, Object> lhs, final LinkedHashMap<String, Object> rhs )
-      {
-        final String left = (String) lhs.get( TABLE_TYPE ) + lhs.get( TABLE_NAME );
-        final String right = (String) rhs.get( TABLE_TYPE ) + rhs.get( TABLE_NAME );
-        return left.compareTo( right );
-      }
+    Collections.sort( linkedHashMaps, ( lhs, rhs ) -> {
+      final String left = (String) lhs.get( TABLE_TYPE ) + lhs.get( TABLE_NAME );
+      final String right = (String) rhs.get( TABLE_TYPE ) + rhs.get( TABLE_NAME );
+      return left.compareTo( right );
     } );
     return linkedHashMaps;
   }
@@ -342,15 +337,10 @@ public final class DatabaseDumper
   {
     final List<LinkedHashMap<String, Object>> linkedHashMaps =
       extractFromRow( metaData.getProcedures( null, schema, null ), ALLOWABLE_PROCEDURE_ATTRIBUTES );
-    Collections.sort( linkedHashMaps, new Comparator<LinkedHashMap<String, Object>>()
-    {
-      @Override
-      public int compare( final LinkedHashMap<String, Object> lhs, final LinkedHashMap<String, Object> rhs )
-      {
-        final String left = (String) lhs.get( PROCEDURE_NAME );
-        final String right = (String) rhs.get( PROCEDURE_NAME );
-        return left.compareTo( right );
-      }
+    Collections.sort( linkedHashMaps, ( lhs, rhs ) -> {
+      final String left = (String) lhs.get( PROCEDURE_NAME );
+      final String right = (String) rhs.get( PROCEDURE_NAME );
+      return left.compareTo( right );
     } );
     return linkedHashMaps;
   }
@@ -361,15 +351,10 @@ public final class DatabaseDumper
   {
     final List<LinkedHashMap<String, Object>> linkedHashMaps =
       extractFromRow( metaData.getUDTs( null, schema, null, null ), ALLOWABLE_UDT_ATTRIBUTES );
-    Collections.sort( linkedHashMaps, new Comparator<LinkedHashMap<String, Object>>()
-    {
-      @Override
-      public int compare( final LinkedHashMap<String, Object> lhs, final LinkedHashMap<String, Object> rhs )
-      {
-        final String left = (String) lhs.get( UDT_NAME );
-        final String right = (String) rhs.get( UDT_NAME );
-        return left.compareTo( right );
-      }
+    Collections.sort( linkedHashMaps, ( lhs, rhs ) -> {
+      final String left = (String) lhs.get( UDT_NAME );
+      final String right = (String) rhs.get( UDT_NAME );
+      return left.compareTo( right );
     } );
     return linkedHashMaps;
   }
@@ -386,15 +371,10 @@ public final class DatabaseDumper
     {
       final List<LinkedHashMap<String, Object>> linkedHashMaps =
         extractFromRow( metaData.getFunctions( null, schema, null ), ALLOWABLE_FUNCTION_ATTRIBUTES );
-      Collections.sort( linkedHashMaps, new Comparator<LinkedHashMap<String, Object>>()
-      {
-        @Override
-        public int compare( final LinkedHashMap<String, Object> lhs, final LinkedHashMap<String, Object> rhs )
-        {
-          final String left = (String) lhs.get( FUNCTION_NAME );
-          final String right = (String) rhs.get( FUNCTION_NAME );
-          return left.compareTo( right );
-        }
+      Collections.sort( linkedHashMaps, ( lhs, rhs ) -> {
+        final String left = (String) lhs.get( FUNCTION_NAME );
+        final String right = (String) rhs.get( FUNCTION_NAME );
+        return left.compareTo( right );
       } );
       return linkedHashMaps;
     }
@@ -467,45 +447,32 @@ public final class DatabaseDumper
   private <T> List<T> extractFromRow( final ResultSet resultSet, final String key )
     throws Exception
   {
-    return map( resultSet, new MapHandler<T>()
-    {
-      @Override
-      public T handle( final Map<String, Object> row )
-      {
-        return extract( row, key );
-      }
-    } );
+    return map( resultSet, row -> extract( row, key ) );
   }
 
   private List<LinkedHashMap<String, Object>> extractFromRow( final ResultSet resultSet,
                                                               final List<String> keys )
     throws Exception
   {
-    return map( resultSet, new MapHandler<LinkedHashMap<String, Object>>()
-    {
-      @SuppressWarnings( "unchecked" )
-      @Override
-      public LinkedHashMap<String, Object> handle( final Map<String, Object> row )
+    return map( resultSet, (MapHandler<LinkedHashMap<String, Object>>) row -> {
+      final LinkedHashMap tuple = new LinkedHashMap();
+      for ( final String key : keys )
       {
-        final LinkedHashMap tuple = new LinkedHashMap();
-        for ( final String key : keys )
+        final String accessKey;
+        final boolean optional;
+        if ( key.startsWith( "?" ) )
         {
-          final String accessKey;
-          final boolean optional;
-          if ( key.startsWith( "?" ) )
-          {
-            accessKey = key.substring( 1 );
-            optional = true;
-          }
-          else
-          {
-            accessKey = key;
-            optional = false;
-          }
-          tuple.put( accessKey.toLowerCase(), extract( row, accessKey, optional ) );
+          accessKey = key.substring( 1 );
+          optional = true;
         }
-        return tuple;
+        else
+        {
+          accessKey = key;
+          optional = false;
+        }
+        tuple.put( accessKey.toLowerCase(), extract( row, accessKey, optional ) );
       }
+      return tuple;
     } );
   }
 
@@ -559,14 +526,7 @@ public final class DatabaseDumper
     throws Exception
   {
     final ArrayList<T> results = new ArrayList<>();
-    each( resultSet, new RowHandler()
-    {
-      @Override
-      public void handle( final Map<String, Object> row )
-      {
-        results.add( handler.handle( row ) );
-      }
-    } );
+    each( resultSet, row -> results.add( handler.handle( row ) ) );
     return results;
   }
 
