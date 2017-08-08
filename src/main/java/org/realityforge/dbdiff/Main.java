@@ -6,10 +6,10 @@ import java.util.List;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.realityforge.cli.CLArgsParser;
-import org.realityforge.cli.CLOption;
-import org.realityforge.cli.CLOptionDescriptor;
-import org.realityforge.cli.CLUtil;
+import org.realityforge.getopt4j.CLArgsParser;
+import org.realityforge.getopt4j.CLOption;
+import org.realityforge.getopt4j.CLOptionDescriptor;
+import org.realityforge.getopt4j.CLUtil;
 
 /**
  * The entry point in which to run the tool.
@@ -60,7 +60,7 @@ public class Main
                             VERBOSE_OPT,
                             "Verbose output of differences.",
                             new int[]{ QUIET_OPT } ),
-  };
+    };
 
   private static final int NO_DIFFERENCE_EXIT_CODE = 0;
   private static final int DIFFERENCE_EXIT_CODE = 1;
@@ -160,7 +160,8 @@ public class Main
     }
 
     // Get a list of parsed options
-    @SuppressWarnings( "unchecked" ) final List<CLOption> options = parser.getArguments();
+    @SuppressWarnings( "unchecked" )
+    final List<CLOption> options = parser.getArguments();
     for ( final CLOption option : options )
     {
       switch ( option.getId() )

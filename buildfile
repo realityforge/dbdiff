@@ -7,7 +7,7 @@ define 'dbdiff' do
   compile.options.target = '1.8'
   compile.options.lint = 'all'
 
-  compile.with :spice_cli,
+  compile.with :getopt4j,
                :diffutils,
                :jtds,
                :postgresql
@@ -16,7 +16,7 @@ define 'dbdiff' do
 
   package(:jar)
   package(:jar, :classifier => 'all').tap do |jar|
-    jar.merge(artifact(:spice_cli))
+    jar.merge(artifact(:getopt4j))
     jar.merge(artifact(:diffutils))
   end
 end
