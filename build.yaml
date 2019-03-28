@@ -1,7 +1,7 @@
 repositories:
   remote:
    - http://repo.fire.dse.vic.gov.au/content/groups/fisg
-   - http://repo1.maven.org/maven2
+   - https://repo1.maven.org/maven2
 
 artifacts:
   getopt4j: org.realityforge.getopt4j:getopt4j:jar:1.2
